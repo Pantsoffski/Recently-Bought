@@ -1,0 +1,24 @@
+.fixed-dialog {
+    position: fixed;
+    top: 50px;
+    left: 50px;
+}
+
+.fixed-dialog .ui-dialog-titlebar-close {
+    visibility: visible;
+    position: absolute;
+}
+
+.fixed-dialog .ui-dialog-titlebar {
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#itemsToShow a {
+    color: #000000;
+    outline : none;
+    font-size: 80%;
+}
