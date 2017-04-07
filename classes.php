@@ -47,72 +47,97 @@ class Someone_Recently_Bought_Init { # Initialization
 class Someone_Recently_Bought_Main {
 
     public static function main_draw() {
-        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed', 'order' => 'DESC', 'posts_per_page' => 5);
-        $ordersToShow = get_posts($args);
+        if (current_user_can('administrator')) {
+            $toShow = self::data_miner();
+            ?>
+
+            <script type="text/javascript">
+                jQuery(document).ready((function () {
+                    function getCookie(cname) {
+                        var name = cname + "=";
+                        var decodedCookie = decodeURIComponent(document.cookie);
+                        var ca = decodedCookie.split(';');
+                        for (var i = 0; i < ca.length; i++) {
+                            var c = ca[i];
+                            while (c.charAt(0) == ' ') {
+                                c = c.substring(1);
+                            }
+                            if (c.indexOf(name) == 0) {
+                                return c.substring(name.length, c.length);
+                            }
+                        }
+                        return "";
+                    }
+
+                    var cCookie = getCookie("justBought");
+
+                    var toShow = <?php echo $toShow; ?>;
+
+                    if (cCookie == "" && typeof toShow !== 'undefined' && toShow.length > 0) {
+                        jQuery('#justBought').dialog({
+                            position: {my: 'right bottom', at: 'right bottom', of: window},
+                            dialogClass: 'fixed-dialog',
+                            draggable: false,
+                            resizable: false,
+                            show: {effect: 'fade', duration: 1000},
+                            hide: {effect: 'fade', duration: 1000},
+                            close: function (event, ui) {
+                                var date = new Date();
+                                date.setTime(date.getTime() + (600 * 1000));
+                                var expires = "; expires=" + date.toGMTString();
+                                document.cookie = "justBought = closed;" + expires + "; path=/";
+                            }
+                        });
+
+                        jQuery('#itemsToShow').html(toShow[0]);
+
+                        var timesRun = 0;
+                        var interval = setInterval(function () {
+                            if (timesRun === 1) {
+                                jQuery('#justBought').dialog('destroy');
+                                var date = new Date();
+                                date.setTime(date.getTime() + (15 * 1000));
+                                var expires = "; expires=" + date.toGMTString();
+                                document.cookie = "justBought = closed;" + expires + "; path=/";
+                                clearInterval(interval);
+                            }
+                            jQuery('#itemsToShow').fadeOut(500, function () {
+                                jQuery(this).html(toShow[timesRun]).fadeIn(500);
+                            });
+                            timesRun += 1;
+                        }, 3000);
+                    }
+
+
+                }));
+            </script>
+            <div id="justBought" title="">
+                <p id="itemsToShow"></p>
+            </div>
+
+            <?php
+        }
+    }
+
+    public static function data_miner() {
+        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed, wc-pending, wc-processing', 'orderby' => 'ID', 'order' => 'DESC', 'post_status' => 'publish', 'posts_per_page' => 5);
+        $ordersToShow = get_posts($args); //gets args and return posts that match
         $counting = count($ordersToShow);
         for ($i = 1; $i <= $counting; $i++) {
             $c = $i - 1;
             $orders[$c] = new WC_Order($ordersToShow[$c]->ID);
             $items[$c] = $orders[$c]->get_items();
             $items[$c] = array_values($items[$c]);
-            $htmlToShow[$c] = '<a href="' . get_permalink(13) . '">' . get_the_post_thumbnail($items[$c][0]['product_id'], 'thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) . $orders[$c]->shipping_first_name . ' recently bought </br>' . $items[$c][0]['name'] . '</a>';
+            $htmlToShow[$c] = '<a href="' . get_permalink(13) . '">' . get_the_post_thumbnail($items[$c][0]['product_id'], 'thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) . $orders[$c]->shipping_first_name . ' recently bought </br><span id="productTitle">' . $items[$c][0]['name'] . '</span></a>';
         }
-        $toShow = json_encode($htmlToShow);
-        ?>
-        <script type="text/javascript">
-            jQuery(document).ready((function () {
-                function getCookie(cname) {
-                    var name = cname + "=";
-                    var decodedCookie = decodeURIComponent(document.cookie);
-                    var ca = decodedCookie.split(';');
-                    for (var i = 0; i < ca.length; i++) {
-                        var c = ca[i];
-                        while (c.charAt(0) == ' ') {
-                            c = c.substring(1);
-                        }
-                        if (c.indexOf(name) == 0) {
-                            return c.substring(name.length, c.length);
-                        }
-                    }
-                    return "";
-                }
-                var cCookie = getCookie("justBought");
-                if (cCookie == "") {
-                    jQuery('#justBought').dialog({
-                        position: {my: 'right bottom', at: 'right bottom', of: window},
-                        dialogClass: 'fixed-dialog',
-                        draggable: false,
-                        resizable: false,
-                        show: {effect: 'fade', duration: 1000},
-                        hide: {effect: 'fade', duration: 1000},
-                        close: function (event, ui) {
-                            var date = new Date();
-                            date.setTime(date.getTime() + (30 * 1000));
-                            var expires = "; expires=" + date.toGMTString();
-                            document.cookie = "justBought = closed;" + expires + "; path=/";
-                        }
-                    });
-                }
-                var toShow = <?php echo $toShow; ?>;
-                jQuery('#itemsToShow').html(toShow[0]);
-                setInterval(function () {
-                    var i = Math.round((Math.random()) * toShow.length);
-                    if (i == toShow.length) {
-                        --i;
-                    }
-                    if (cCookie == "") {
-                        jQuery('#itemsToShow').fadeOut(500, function () {
-                            jQuery(this).html(toShow[i]).fadeIn(500);
-                        });
-                        jQuery(this).html(toShow[i]).fadeIn(500);
-                    }
-                }, 5 * 1000);
-            }));
-        </script>
-        <div id="justBought" title="">
-            <p id="itemsToShow"></p>
-        </div>
-        <?php
+
+        if (isset($htmlToShow)) {
+            $toShow = json_encode($htmlToShow);
+        } else {
+            $toShow = '';
+        }
+
+        return $toShow;
     }
 
 }

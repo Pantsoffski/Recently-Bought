@@ -5,7 +5,7 @@
  * Plugin URI: http://ordin.pl/
  * Description: Plugin that popup little snippet on the WooCommerce shop (e.g. on the bottom of site) and tells customer that someone recently bought some product. If clicked - it takes to the product they bought.
  * Author: Piotr Pesta
- * Version: 0.1
+ * Version: 0.2.0
  * Author URI: http://ordin.pl/
  * License: GPL12
  * Text Domain: recently-bought-for-woocommerce
@@ -20,6 +20,11 @@ function pp_recently_bought_for_woocommerce_main_init() {
         require_once( ADVANCED_DASHBOARD_PLUGIN_DIR . 'classes.php' );
         add_action('init', array('Someone_Recently_Bought_Init', 'init'));
     } else {
-        echo 'WooCommerce is not Active.';
+        ?>
+        <script type="text/javascript">
+            alert("WooCommerce not installed!!");
+        </script>
+        <?php
+
     }
 }
