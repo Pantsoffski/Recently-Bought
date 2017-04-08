@@ -92,20 +92,23 @@ class Someone_Recently_Bought_Main {
                         jQuery('#itemsToShow').html(toShow[0]);
 
                         var timesRun = 0;
+                        var numberOfOrders = 4;
                         var interval = setInterval(function () {
-                            if (timesRun === 1) {
+                            timesRun += 1;
+                            if (timesRun > numberOfOrders) {
                                 jQuery('#justBought').dialog('destroy');
+                                jQuery('p').remove('#itemsToShow');
                                 var date = new Date();
                                 date.setTime(date.getTime() + (15 * 1000));
                                 var expires = "; expires=" + date.toGMTString();
                                 document.cookie = "justBought = closed;" + expires + "; path=/";
                                 clearInterval(interval);
+                            } else if (timesRun <= numberOfOrders) {
+                                jQuery('#itemsToShow').fadeOut(500, function () {
+                                    jQuery(this).html(toShow[timesRun]).fadeIn(500);
+                                });
                             }
-                            jQuery('#itemsToShow').fadeOut(500, function () {
-                                jQuery(this).html(toShow[timesRun]).fadeIn(500);
-                            });
-                            timesRun += 1;
-                        }, 3000);
+                        }, 5 * 1000);
                     }
 
 
@@ -128,7 +131,7 @@ class Someone_Recently_Bought_Main {
             $orders[$c] = new WC_Order($ordersToShow[$c]->ID);
             $items[$c] = $orders[$c]->get_items();
             $items[$c] = array_values($items[$c]);
-            $htmlToShow[$c] = '<a href="' . get_permalink(13) . '">' . get_the_post_thumbnail($items[$c][0]['product_id'], 'thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) . $orders[$c]->shipping_first_name . ' recently bought </br><span id="productTitle">' . $items[$c][0]['name'] . '</span></a>';
+            $htmlToShow[$c] = '<a href="' . get_permalink($items[$c][0]['product_id']) . '">' . get_the_post_thumbnail($items[$c][0]['product_id'], 'thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) . $orders[$c]->shipping_first_name . ' recently bought </br><span id="productTitle">' . $items[$c][0]['name'] . '</span></a>';
         }
 
         if (isset($htmlToShow)) {
