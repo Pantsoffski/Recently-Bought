@@ -24,22 +24,32 @@ class Someone_Recently_Bought_Init { # Initialization
         add_action('wp_footer', array('Someone_Recently_Bought_Main', 'main_draw'), 100);
     }
 
+    static function activate_plugin() {
+        add_option('recently_bought_settings_pnumber', 5);
+        add_option('recently_bought_settings_text', 'recently bought');
+    }
+
+    public static function uninstall_plugin() {
+        delete_option('recently_bought_settings_pnumber');
+        delete_option('recently_bought_settings_text');
+    }
+
     public static function admin_init() {
         
     }
 
     public static function admin_menu() {
-        
+        require_once( RECENTLY_BOUGHT_PLUGIN_DIR . 'views/options.php' );
+        $optionsTitle = __('Recently Bought', 'recently-bought');
+        add_menu_page($optionsTitle, $optionsTitle, 'administrator', 'rbset', 'recently_bought_settings', 'dashicons-carrot');
     }
 
     public static function just_init() {
-        if (!is_admin()) {
-            wp_enqueue_script('jquery-ui-dialog');
-            wp_enqueue_script('jquery-effects-core');
-            wp_enqueue_script('jquery-effects-fade');
-            wp_enqueue_style('wp-jquery-ui-dialog');
-            wp_enqueue_style('pp_recently_bought_for_woocommerce_main_style', plugins_url('recently-bought-style.css', __FILE__));
-        }
+        wp_enqueue_script('jquery-ui-dialog');
+        wp_enqueue_script('jquery-effects-core');
+        wp_enqueue_script('jquery-effects-fade');
+        wp_enqueue_style('wp-jquery-ui-dialog');
+        wp_enqueue_style('pp_recently_bought_for_woocommerce_main_style', plugins_url('_inc/recently-bought-style.css', __FILE__));
     }
 
 }
@@ -123,7 +133,7 @@ class Someone_Recently_Bought_Main {
     }
 
     public static function data_miner() {
-        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed, wc-pending, wc-processing', 'orderby' => 'ID', 'order' => 'DESC', 'post_status' => 'publish', 'posts_per_page' => 5);
+        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed, wc-pending, wc-processing', 'orderby' => 'ID', 'order' => 'DESC', 'posts_per_page' => 5);
         $ordersToShow = get_posts($args); //gets args and return posts that match
         $counting = count($ordersToShow);
         for ($i = 1; $i <= $counting; $i++) {
@@ -131,10 +141,11 @@ class Someone_Recently_Bought_Main {
             $orders[$c] = new WC_Order($ordersToShow[$c]->ID);
             $items[$c] = $orders[$c]->get_items();
             $items[$c] = array_values($items[$c]);
-            $htmlToShow[$c] = '<a href="' . get_permalink($items[$c][0]['product_id']) . '">' . get_the_post_thumbnail($items[$c][0]['product_id'], 'thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) . $orders[$c]->shipping_first_name . ' recently bought </br><span id="productTitle">' . $items[$c][0]['name'] . '</span></a>';
+            $htmlToShow[$c] = '<a href="' . get_permalink($items[$c][0]['product_id']) . '">' . get_the_post_thumbnail($items[$c][0]['product_id'], 'thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) . $orders[$c]->shipping_first_name . ' ' . get_option('recently_bought_settings_text') . ' </br><span id="productTitle">' . $items[$c][0]['name'] . '</span></a>';
         }
 
         if (isset($htmlToShow)) {
+            var_dump(get_option('recently_bought_settings_text')); //dlaczego nie dodaje opcji, wyjaśnić
             $toShow = json_encode($htmlToShow);
         } else {
             $toShow = '';
