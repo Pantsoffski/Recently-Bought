@@ -13,14 +13,14 @@
             </tr>
 
             <tr valign="top">
-                <th scope="row"><?php _e('Number of orders to show (2-25):', 'recently-bought'); ?></th>
+                <th scope="row"><?php _e('Number of orders to show (2-10):', 'recently-bought'); ?></th>
                 <td>
-                    <input type="number" name="recently_bought_settings_pnumber" value="<?php echo esc_attr(get_option('recently_bought_settings_pnumber')); ?>" min="2" max="25" />
+                    <input type="number" name="recently_bought_settings_pnumber" value="<?php echo esc_attr(get_option('recently_bought_settings_pnumber')); ?>" min="2" max="10" />
                 </td>
             </tr>
 
             <tr valign="top">
-                <th scope="row"><?php _e('Randomize order:', 'recently-bought'); ?></th>
+                <th scope="row"><?php _e('Randomize orders:', 'recently-bought'); ?></th>
                 <td>
                     <input type="checkbox" name="recently_bought_settings_randomize" value="1" <?php checked(get_option('recently_bought_settings_randomize')); ?>/>
                 </td>

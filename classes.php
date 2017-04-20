@@ -3,9 +3,6 @@ if (!defined('ABSPATH')) {
     exit; # Exit if accessed directly
 }
 
-require_once(plugin_dir_path(__FILE__) . '/../woocommerce/includes/admin/reports/class-wc-admin-report.php');
-require_once(plugin_dir_path(__FILE__) . '/../woocommerce/includes/admin/reports/class-wc-report-sales-by-date.php');
-
 class Someone_Recently_Bought_Init { # Initialization
 
     private static $initiated = false;
@@ -44,7 +41,7 @@ class Someone_Recently_Bought_Init { # Initialization
 
     public static function admin_menu() {
         $optionsTitle = __('Recently Bought', 'recently-bought');
-        add_menu_page($optionsTitle, $optionsTitle, 'administrator', 'recently-bought-settings', array('Someone_Recently_Bought_Init', 'options_page'), 'dashicons-carrot');
+        add_menu_page($optionsTitle, $optionsTitle, 'administrator', 'recently-bought-settings', array('Someone_Recently_Bought_Init', 'options_page'), 'dashicons-cart');
     }
 
     public static function just_init() {
@@ -96,6 +93,7 @@ class Someone_Recently_Bought_Main {
                         dialogClass: 'fixed-dialog',
                         draggable: false,
                         resizable: false,
+                        //height: 'auto', //check that later
                         show: {effect: 'fade', duration: 1000},
                         hide: {effect: 'fade', duration: 1000},
                         close: function (event, ui) {
@@ -140,7 +138,7 @@ class Someone_Recently_Bought_Main {
     }
 
     public static function data_miner() {
-        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed, wc-pending, wc-processing', 'orderby' => 'ID', 'order' => 'DESC', 'posts_per_page' => 5);
+        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed, wc-pending, wc-processing', 'orderby' => 'ID', 'order' => 'DESC', 'posts_per_page' => get_option('recently_bought_settings_pnumber'));
         $ordersToShow = get_posts($args); //gets args and return posts that match
         $counting = count($ordersToShow);
         for ($i = 1; $i <= $counting; $i++) {
@@ -152,14 +150,16 @@ class Someone_Recently_Bought_Main {
                     get_permalink($items[$c][0]['product_id']) .
                     '">' .
                     get_the_post_thumbnail($items[$c][0]['product_id'], 'shop_thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) .
-                    $orders[$c]->shipping_first_name . ' ' .
+                    @$orders[$c]->shipping_first_name .
+                    ' ' .
                     get_option('recently_bought_settings_text') .
-                    ' </br><span id="productTitle">' . $items[$c][0]['name'] .
+                    ' </br><span id="productTitle">' .
+                    $items[$c][0]['name'] .
                     '</span></a>';
         }
 
         if (isset($htmlToShow)) {
-            if (get_option('recently_bought_settings_randomize') == 1) {
+            if (get_option('recently_bought_settings_randomize') == 1) { //randomizer
                 shuffle($htmlToShow);
             }
             $toShow = json_encode($htmlToShow);

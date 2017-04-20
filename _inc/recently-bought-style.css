@@ -2,7 +2,13 @@
     position: fixed;
     top: 50px;
     left: 50px;
+    margin-bottom: 20px;
 }
+
+/*.ui-dialog-content {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}*/
 
 .fixed-dialog .ui-dialog-titlebar-close {
     visibility: visible;
