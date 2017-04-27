@@ -2,10 +2,9 @@
 
 /*
  * Plugin Name: Recently Bought This for WooCommerce
- * Plugin URI: http://ordin.pl/
  * Description: Plugin that popup little snippet on the WooCommerce shop (e.g. on the bottom of site) and tells customer that someone recently bought some product. If clicked - it takes to the product they bought.
  * Author: Piotr Pesta
- * Version: 0.2.5
+ * Version: 0.3.0
  * Author URI: http://ordin.pl/
  * License: GPL12
  * Text Domain: recently-bought-for-woocommerce
@@ -18,6 +17,7 @@ if (!function_exists('add_action')) {
 }
 
 define('RECENTLY_BOUGHT_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('RECENTLY_BOUGHT_PLUGIN_BASENAME', plugin_basename(__FILE__));
 require_once( RECENTLY_BOUGHT_PLUGIN_DIR . 'classes.php' );
 
 register_activation_hook(__FILE__, array('Someone_Recently_Bought_Init', 'activate_plugin'));

@@ -20,6 +20,16 @@
             </tr>
 
             <tr valign="top">
+                <th scope="row"><?php _e('In which shop corner you wish to show it?', 'recently-bought'); ?></th>
+                <td>
+                    <input type="radio" name="recently_bought_settings_corner" value="0" <?php checked('0', get_option('recently_bought_settings_corner')); ?>> Right-Top<br>
+                    <input type="radio" name="recently_bought_settings_corner" value="1" <?php checked('1', get_option('recently_bought_settings_corner')); ?>> Right-Bottom<br>
+                    <input type="radio" name="recently_bought_settings_corner" value="2" <?php checked('2', get_option('recently_bought_settings_corner')); ?>> Left-Bottom<br>
+                    <input type="radio" name="recently_bought_settings_corner" value="3" <?php checked('3', get_option('recently_bought_settings_corner')); ?>> Left-Top<br>
+                </td>
+            </tr>
+
+            <tr valign="top">
                 <th scope="row"><?php _e('Randomize orders:', 'recently-bought'); ?></th>
                 <td>
                     <input type="checkbox" name="recently_bought_settings_randomize" value="1" <?php checked(get_option('recently_bought_settings_randomize')); ?>/>

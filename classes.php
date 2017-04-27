@@ -15,33 +15,37 @@ class Someone_Recently_Bought_Init { # Initialization
 
     public static function init_hooks() {
         self::$initiated = true;
-        add_action('admin_init', array('Someone_Recently_Bought_Init', 'admin_init'));
-        add_action('wp_loaded', array('Someone_Recently_Bought_Init', 'just_init'));
-        add_action('admin_menu', array('Someone_Recently_Bought_Init', 'admin_menu'), 5); # Priority 5
+        add_action('admin_init', array(__CLASS__, 'admin_init'));
+        add_action('wp_loaded', array(__CLASS__, 'just_init'));
+        add_action('admin_menu', array(__CLASS__, 'admin_menu'), 5); # Priority 5
         add_action('wp_footer', array('Someone_Recently_Bought_Main', 'main_draw'), 100);
+        add_filter('plugin_action_links_' . RECENTLY_BOUGHT_PLUGIN_BASENAME, array(__CLASS__, 'plugin_action_links_rb'));
     }
 
     static function activate_plugin() {
         add_option('recently_bought_settings_pnumber', 5);
         add_option('recently_bought_settings_text', 'recently bought');
         add_option('recently_bought_settings_randomize', 0);
+        add_option('recently_bought_settings_corner', 1); //0 == RT, 1 == RB, 2 == LB, 3 == LT
     }
 
     public static function uninstall_plugin() {
         delete_option('recently_bought_settings_pnumber');
         delete_option('recently_bought_settings_text');
         delete_option('recently_bought_settings_randomize');
+        delete_option('recently_bought_settings_corner');
     }
 
     public static function admin_init() {
         register_setting('recently_bought_settings_group', 'recently_bought_settings_text');
         register_setting('recently_bought_settings_group', 'recently_bought_settings_pnumber');
         register_setting('recently_bought_settings_group', 'recently_bought_settings_randomize');
+        register_setting('recently_bought_settings_group', 'recently_bought_settings_corner');
     }
 
     public static function admin_menu() {
         $optionsTitle = __('Recently Bought', 'recently-bought');
-        add_menu_page($optionsTitle, $optionsTitle, 'administrator', 'recently-bought-settings', array('Someone_Recently_Bought_Init', 'options_page'), 'dashicons-cart');
+        add_menu_page($optionsTitle, $optionsTitle, 'administrator', 'recently-bought-settings', array(__CLASS__, 'options_page_rb'), 'dashicons-cart');
     }
 
     public static function just_init() {
@@ -52,8 +56,16 @@ class Someone_Recently_Bought_Init { # Initialization
         wp_enqueue_style('pp_recently_bought_for_woocommerce_main_style', plugins_url('_inc/recently-bought-style.css', __FILE__));
     }
 
-    public static function options_page() {
+    public static function options_page_rb() { //Add settings page
         require_once( RECENTLY_BOUGHT_PLUGIN_DIR . 'views/options.php' );
+    }
+
+    public static function plugin_action_links_rb($links) { //Add settings link to plugins page
+        $action_links = array(
+            'settings' => '<a href="' . admin_url('admin.php?page=recently-bought-settings') . '">' . esc_html__('Settings', 'woocommerce') . '</a>',
+        );
+
+        return array_merge($action_links, $links);
     }
 
 }
@@ -61,7 +73,6 @@ class Someone_Recently_Bought_Init { # Initialization
 class Someone_Recently_Bought_Main {
 
     public static function main_draw() {
-        //if (current_user_can('administrator')) {
         $toShow = self::data_miner();
         ?>
 
@@ -89,11 +100,21 @@ class Someone_Recently_Bought_Main {
 
                 if (cCookie == "" && typeof toShow !== 'undefined' && toShow.length > 0) {
                     jQuery('#justBought').dialog({
-                        position: {my: 'right bottom', at: 'right bottom', of: window},
+        <?php
+        $corner = get_option('recently_bought_settings_corner');
+        if ($corner == 0) {
+            echo "position: {my: 'right top', at: 'right top', of: window},";
+        } elseif ($corner == 1) {
+            echo "position: {my: 'right bottom', at: 'right bottom', of: window},";
+        } elseif ($corner == 2) {
+            echo "position: {my: 'left bottom', at: 'left bottom', of: window},";
+        } elseif ($corner == 3) {
+            echo "position: {my: 'left top', at: 'left top', of: window},";
+        }
+        ?>
                         dialogClass: 'fixed-dialog',
                         draggable: false,
                         resizable: false,
-                        //height: 'auto', //check that later
                         show: {effect: 'fade', duration: 1000},
                         hide: {effect: 'fade', duration: 1000},
                         close: function (event, ui) {
@@ -134,7 +155,6 @@ class Someone_Recently_Bought_Main {
         </div>
 
         <?php
-        //}
     }
 
     public static function data_miner() {
