@@ -35,6 +35,13 @@
                     <input type="checkbox" name="recently_bought_settings_randomize" value="1" <?php checked(get_option('recently_bought_settings_randomize')); ?>/>
                 </td>
             </tr>
+            
+            <tr valign="top">
+                <th scope="row"><?php _e('Popup after some delay (0-30 seconds):', 'recently-bought'); ?></th>
+                <td>
+                    <input type="number" name="recently_bought_settings_slide_in_delay" value="<?php echo esc_attr(get_option('recently_bought_settings_slide_in_delay')); ?>" min="0" max="30" />
+                </td>
+            </tr>
         </table>
 
         <?php submit_button(); ?>

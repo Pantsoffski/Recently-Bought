@@ -5,8 +5,8 @@ Plugin Name: Recently Bought This for WooCommerce
 Tags: plugin, real time orders, store front, recently, sale, boost sales, someone bought
 Author: Piotr Pesta
 Requires at least: 4.7
-Tested up to: 4.7
-Stable tag: 0.3.0
+Tested up to: 5.2
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,10 @@ If you would like to show your support for this software, please consider donati
 
 == Installation ==
 
+Simply install it via plugin manager via admin area (dashboard) of your store.
+
+Or...
+
 1. Upload the zip to 'plugins' directory
 2. Unzip (steps 1 and 2 can also be performed automatically)
 3. Activate the plugin
@@ -38,6 +42,9 @@ Or just add .zip file as a new plugin in your Wordpress administration panel.
 2. Screenshot 2 - Recently Bought This for WooCommerce - settings page.
 
 == Changelog ==
+= 0.4.0 =
+* Tested with Wordpress 5.2 version
+* From now you can set popup delay (delay on slide in) in settings.
 = 0.3.0 =
 * Now you can choose in which shop corner you wish to show plugin.
 * Added settings link to plugins page.

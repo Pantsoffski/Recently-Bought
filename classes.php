@@ -27,6 +27,7 @@ class Someone_Recently_Bought_Init { # Initialization
         add_option('recently_bought_settings_text', 'recently bought');
         add_option('recently_bought_settings_randomize', 0);
         add_option('recently_bought_settings_corner', 1); //0 == RT, 1 == RB, 2 == LB, 3 == LT
+        add_option('recently_bought_settings_slide_in_delay', 1);
     }
 
     public static function uninstall_plugin() {
@@ -34,13 +35,15 @@ class Someone_Recently_Bought_Init { # Initialization
         delete_option('recently_bought_settings_text');
         delete_option('recently_bought_settings_randomize');
         delete_option('recently_bought_settings_corner');
+        delete_option('recently_bought_settings_slide_in_delay');
     }
 
     public static function admin_init() {
         register_setting('recently_bought_settings_group', 'recently_bought_settings_text');
         register_setting('recently_bought_settings_group', 'recently_bought_settings_pnumber');
         register_setting('recently_bought_settings_group', 'recently_bought_settings_randomize');
-        register_setting('recently_bought_settings_group', 'recently_bought_settings_corner');
+        register_setting('recently_bought_settings_group', 'recently_bought_settings_corner'); 
+        register_setting('recently_bought_settings_group', 'recently_bought_settings_slide_in_delay');
     }
 
     public static function admin_menu() {
@@ -113,6 +116,7 @@ class Someone_Recently_Bought_Main {
         }
         ?>
                         dialogClass: 'fixed-dialog',
+                        autoOpen: false,
                         draggable: false,
                         resizable: false,
                         show: {effect: 'fade', duration: 1000},
@@ -145,9 +149,13 @@ class Someone_Recently_Bought_Main {
                             });
                         }
                     }, 5 * 1000);
+                    
+                    // dialog open dealy
+                    var delay = <?php echo get_option('recently_bought_settings_slide_in_delay') ?> * 1000;
+                    setTimeout(function() {
+                        jQuery('#justBought').dialog('open');
+                    }, delay); // milliseconds
                 }
-
-
             }));
         </script>
         <div id="justBought" title="">

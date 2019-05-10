@@ -4,7 +4,7 @@
  * Plugin Name: Recently Bought This for WooCommerce
  * Description: Plugin that popup little snippet on the WooCommerce shop (e.g. on the bottom of site) and tells customer that someone recently bought some product. If clicked - it takes to the product they bought.
  * Author: Piotr Pesta
- * Version: 0.3.0
+ * Version: 0.4.0
  * Author URI: http://ordin.pl/
  * License: GPL12
  * Text Domain: recently-bought-for-woocommerce
