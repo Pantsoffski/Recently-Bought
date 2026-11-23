@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="760" viewBox="0 0 920 760" role="img" aria-labelledby="title">
+  <title id="title">Harbor Mug, original fictional catalog illustration</title>
+  <defs>
+    <linearGradient id="wall" x2=".9" y2="1"><stop stop-color="#d4ded0"/><stop offset="1" stop-color="#a1bba8"/></linearGradient>
+    <linearGradient id="glaze" x2="1" y2="0"><stop stop-color="#bbd0ad"/><stop offset=".25" stop-color="#719f88"/><stop offset=".76" stop-color="#345e54"/><stop offset="1" stop-color="#779d86"/></linearGradient>
+    <filter id="shadow" x="-40%" width="190%" y="-70%" height="250%"><feGaussianBlur stdDeviation="21"/></filter>
+    <pattern id="matte" width="12" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".6" fill="#fcfbeb" opacity=".55"/><circle cx="7" cy="5" r=".6" fill="#5c5649" opacity=".33"/></pattern>
+  </defs>
+  <rect width="920" height="760" fill="url(#wall)"/>
+  <path d="M0 552L920 498V760H0z" fill="#d4ded0" opacity=".56"/>
+  <path d="M-110 0h364l-108 534H-110zm451 0h104L347 523l-116 7z" fill="#f4f1de" opacity=".32" filter="url(#shadow)"/>
+  <rect width="920" height="760" fill="url(#matte)" opacity=".34"/>
+  <ellipse cx="495" cy="592" rx="250" ry="32" fill="#264d45" opacity=".34" filter="url(#shadow)"/>
+  <ellipse cx="456" cy="594" rx="117" ry="8" fill="#264d45" opacity=".22"/>
+  <path d="M563 317c138-51 180 54 109 123-28 27-68 39-120 32" fill="none" stroke="#315f52" stroke-width="35" stroke-linecap="round"/><path d="M571 321c121-42 148 41 91 101-23 24-62 37-102 32" fill="none" stroke="#87b09b" stroke-opacity=".65" stroke-width="6" stroke-linecap="round"/><path d="M279 289c9 46 30 209 43 268 8 56 203 68 224-1 18-61 39-207 48-267z" fill="url(#glaze)"/><path d="M299 325c9 90 21 169 36 221m11-205c8 89 16 160 27 208m17-206c6 98 10 155 16 215m24-219v222m36-221c-2 92-8 164-12 217m49-221c-8 102-14 172-24 215m48-220c-11 95-23 165-32 206m48-211c-9 86-21 158-33 198" fill="none" stroke="#b2d3bd" stroke-opacity=".22" stroke-width="4"/><ellipse cx="437" cy="290" rx="157" ry="52" fill="#a4c1a8"/><ellipse cx="437" cy="290" rx="141" ry="40" fill="#355747"/><path d="M313 293c40-27 197-29 250 1" fill="none" stroke="#89b092" stroke-width="4" stroke-opacity=".4"/><ellipse cx="437" cy="291" rx="151" ry="46" fill="none" stroke="#e3e3bb" stroke-width="4" stroke-opacity=".72"/><path d="M339 571c40 30 157 29 193-3" fill="none" stroke="#d7c5a2" stroke-opacity=".57" stroke-width="6"/>
+</svg>

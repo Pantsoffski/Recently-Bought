@@ -1,9 +1,10 @@
 const assert = require( 'node:assert/strict' );
 const { chromium } = require( 'playwright' );
 
-const origin = 'http://127.0.0.1:38989';
+const origin = process.env.RBT_TEST_ORIGIN || 'http://127.0.0.1:38989';
+assert.match( origin, /^http:\/\/127\.0\.0\.1:\d+$/ );
 const settingsPath = '/wp-admin/admin.php?page=recently-bought-settings';
-const privateMarkers = [ 'TEST_PRIVATE_SURNAME_7391', 'TEST_PRIVATE_FAMILY_7391', 'TEST_PRIVATE_ADDRESS_7391', 'test-private-7391@example.test', '739100000001' ];
+const privateMarkers = [ 'TEST_PRIVATE_SURNAME_7391', 'TEST_PRIVATE_FAMILY_7391', 'TEST_PRIVATE_ADDRESS_7391', 'TEST_PRIVATE_LINE_7391', 'test-private-7391@example.test', '739100000001' ];
 
 async function openLocalContext( browser, viewport ) {
 	const context = await browser.newContext( { baseURL: origin, viewport } );
@@ -88,7 +89,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 	} );
 	assertPrivate( await page.content() );
 	assert.equal( info.position, [ 'right top', 'right bottom', 'left bottom', 'left top' ][ corner ] );
-	assert.equal( info.name, 'Retro "O’Neil" <strong>Fixture</strong> & café' );
+	assert.equal( info.name, 'Stage A Synthetic storefront product' );
 	assert.equal( info.nameChildren, 0 );
 	assert.match( info.text, /^Someone bought: “fixture”; const sample = 1\./ );
 	assert.equal( info.imageHeight, '80px' );
@@ -119,7 +120,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 		await page.waitForTimeout( 1000 );
 		assert.equal( await pending.count(), 0 );
 	} else if ( corner === 3 ) {
-		await page.locator( '#productTitle', { hasText: 'Second synthetic item' } ).waitFor( { timeout: 6500 } );
+		await page.locator( '#productTitle', { hasText: 'Stage A Synthetic second product' } ).waitFor( { timeout: 6500 } );
 		await pending.waitFor( { state: 'detached', timeout: 6500 } );
 		const cookie = ( await visitors.cookies() ).find( ( value ) => value.name === info.settings.cookieName );
 		const remaining = cookie && cookie.expires - Date.now() / 1000;

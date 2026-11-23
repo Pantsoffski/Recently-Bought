@@ -1,12 +1,20 @@
 <?php
 /**
  * Plugin Name: Recently Bought This for WooCommerce
- * Description: Plugin that popup little snippet on the WooCommerce shop (e.g. on the bottom of site) and tells customer that someone recently bought some product. If clicked - it takes to the product they bought.
+ * Plugin URI: https://wordpress.org/plugins/recently-bought-this-for-woocommerce/
+ * Description: Show linked product notifications for confirmed WooCommerce orders without revealing buyer details.
  * Author: Piotr Pesta
- * Version: 0.4.0
- * Author URI: http://ordin.pl/
- * License: GPL12
- * Text Domain: recently-bought-for-woocommerce
+ * Author URI: https://profiles.wordpress.org/piotr-pesta/
+ * Version: 1.0.0
+ * Requires at least: 7.0
+ * Requires PHP: 8.2
+ * Requires Plugins: woocommerce
+ * WC requires at least: 11.2
+ * WC tested up to: 11.3
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * Text Domain: recently-bought-this-for-woocommerce
+ * Domain Path: /languages
  *
  * @package Recently_Bought_This
  */
@@ -22,8 +30,10 @@ require_once RECENTLY_BOUGHT_PLUGIN_DIR . 'classes.php';
 register_activation_hook( __FILE__, array( 'Someone_Recently_Bought_Init', 'activate_plugin' ) );
 register_uninstall_hook( __FILE__, array( 'Someone_Recently_Bought_Init', 'uninstall_plugin' ) );
 
-add_action( 'plugins_loaded', 'pp_recently_bought_for_woocommerce_main_init' );
-add_action( 'init', array( 'Someone_Recently_Bought_Init', 'load_translations' ) );
+// Register the packaged fallback for JIT loading. WordPress checks installed language packs first.
+$GLOBALS['wp_textdomain_registry']->set_custom_path( 'recently-bought-this-for-woocommerce', RECENTLY_BOUGHT_PLUGIN_DIR . 'languages' );
+
+add_action( 'plugins_loaded', array( 'Someone_Recently_Bought_Init', 'plugins_loaded' ) );
 add_action(
 	'before_woocommerce_init',
 	static function () {
@@ -32,13 +42,3 @@ add_action(
 		}
 	}
 );
-
-/** Set up the plugin or register a notice when WooCommerce is unavailable. */
-function pp_recently_bought_for_woocommerce_main_init() {
-	if ( class_exists( 'WooCommerce' ) && function_exists( 'wc_get_orders' ) ) {
-		add_action( 'init', array( 'Someone_Recently_Bought_Init', 'init' ) );
-		return;
-	}
-	add_action( 'admin_notices', array( 'Someone_Recently_Bought_Init', 'missing_woocommerce_notice' ) );
-	add_action( 'network_admin_notices', array( 'Someone_Recently_Bought_Init', 'missing_woocommerce_notice' ) );
-}

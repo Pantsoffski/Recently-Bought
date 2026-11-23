@@ -1,0 +1,120 @@
+{
+  "version": "1.0.0",
+  "slug": "recently-bought-this-for-woocommerce",
+  "package": {
+    "file": "recently-bought-this-for-woocommerce-1.0.0.zip",
+    "bytes": 15118,
+    "sha256": "f60843250cb61b33d20bb0b1fce4fa20f0107f92afc27655ada6042ade83366d",
+    "files": [
+      "recently-bought-this-for-woocommerce/_inc/recently-bought-style.css",
+      "recently-bought-this-for-woocommerce/_inc/recently-bought.js",
+      "recently-bought-this-for-woocommerce/classes.php",
+      "recently-bought-this-for-woocommerce/languages/recently-bought-this-for-woocommerce-pl_PL.l10n.php",
+      "recently-bought-this-for-woocommerce/pp-recently-bought-for-woocommerce.php",
+      "recently-bought-this-for-woocommerce/readme.txt",
+      "recently-bought-this-for-woocommerce/views/options.php"
+    ]
+  },
+  "svn": {
+    "trunk/": [
+      "trunk/_inc/recently-bought-style.css",
+      "trunk/_inc/recently-bought.js",
+      "trunk/classes.php",
+      "trunk/languages/recently-bought-this-for-woocommerce-pl_PL.l10n.php",
+      "trunk/pp-recently-bought-for-woocommerce.php",
+      "trunk/readme.txt",
+      "trunk/views/options.php"
+    ],
+    "tags/1.0.0/": [
+      "tags/1.0.0/_inc/recently-bought-style.css",
+      "tags/1.0.0/_inc/recently-bought.js",
+      "tags/1.0.0/classes.php",
+      "tags/1.0.0/languages/recently-bought-this-for-woocommerce-pl_PL.l10n.php",
+      "tags/1.0.0/pp-recently-bought-for-woocommerce.php",
+      "tags/1.0.0/readme.txt",
+      "tags/1.0.0/views/options.php"
+    ],
+    "assets/": [
+      {
+        "file": "banner-772x250.png",
+        "width": 772,
+        "height": 250,
+        "mime_type": "image/png",
+        "bytes": 80487,
+        "sha256": "69908717561909fafc28297763658afda543516511c476acda1dda1cf096d1be",
+        "purpose": "Standard directory banner",
+        "svn_path": "assets/banner-772x250.png"
+      },
+      {
+        "file": "banner-1544x500.png",
+        "width": 1544,
+        "height": 500,
+        "mime_type": "image/png",
+        "bytes": 242362,
+        "sha256": "b9112c9e05f1949d2a0c8c715953bb8cb71b3424f32fdc214acc6bd18bac814d",
+        "purpose": "Retina directory banner",
+        "svn_path": "assets/banner-1544x500.png"
+      },
+      {
+        "file": "icon-128x128.png",
+        "width": 128,
+        "height": 128,
+        "mime_type": "image/png",
+        "bytes": 9089,
+        "sha256": "33a1e60d3791c162e187f4d7c1f7ecd0a53be8996cb12ef000778442d74999b5",
+        "purpose": "Standard directory icon",
+        "svn_path": "assets/icon-128x128.png"
+      },
+      {
+        "file": "icon-256x256.png",
+        "width": 256,
+        "height": 256,
+        "mime_type": "image/png",
+        "bytes": 22898,
+        "sha256": "86d1ff51160bfb827c26a956e0b22d9a1f4e9dd442345e8ef3a430205206becc",
+        "purpose": "Retina directory icon",
+        "svn_path": "assets/icon-256x256.png"
+      },
+      {
+        "file": "screenshot-1.png",
+        "width": 1440,
+        "height": 1040,
+        "mime_type": "image/png",
+        "bytes": 357689,
+        "sha256": "40c67edc4b1336aaeabe4692e5de013618053324e3bf2b97fccc0cde35e74c53",
+        "purpose": "WooCommerce storefront notification",
+        "svn_path": "assets/screenshot-1.png"
+      },
+      {
+        "file": "screenshot-2.png",
+        "width": 1280,
+        "height": 900,
+        "mime_type": "image/png",
+        "bytes": 67098,
+        "sha256": "8b8c137032393a6b90a1fc0eb65b7c2ed7ee2704c97d3d2fc8c253a7ae6e8026",
+        "purpose": "WordPress admin settings",
+        "svn_path": "assets/screenshot-2.png"
+      },
+      {
+        "file": "screenshot-3.png",
+        "width": 1440,
+        "height": 1040,
+        "mime_type": "image/png",
+        "bytes": 361496,
+        "sha256": "0db7204e3ef70e161696b16a2a78a4b497b1ded5b76c8c41d9a29e8d96793e0a",
+        "purpose": "Approximate time on a dark storefront",
+        "svn_path": "assets/screenshot-3.png"
+      },
+      {
+        "file": "screenshot-4.png",
+        "width": 390,
+        "height": 900,
+        "mime_type": "image/png",
+        "bytes": 112146,
+        "sha256": "1c364d06706ea67cac50e02fee942ebfc58ad4c67870bd30c96d4e9ccfc7eef8",
+        "purpose": "Mobile storefront",
+        "svn_path": "assets/screenshot-4.png"
+      }
+    ]
+  }
+}

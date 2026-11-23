@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 772 250" width="772" height="250" role="img" aria-labelledby="banner-title">
+  <title id="banner-title">Recently Bought This — Purchase notifications for WooCommerce</title>
+  <defs>
+    <linearGradient id="back" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#102c29"/>
+      <stop offset="1" stop-color="#275c4c"/>
+    </linearGradient>
+    <linearGradient id="ceramic" x1="0" x2="1" y1=".15" y2=".9">
+      <stop stop-color="#80a696"/>
+      <stop offset=".5" stop-color="#3e7668"/>
+      <stop offset="1" stop-color="#28594e"/>
+    </linearGradient>
+    <filter id="lift" x="-20%" y="-30%" width="145%" height="180%">
+      <feDropShadow dx="0" dy="13" stdDeviation="13" flood-color="#071d16" flood-opacity=".29"/>
+    </filter>
+    <pattern id="grain" width="13" height="13" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r=".65" fill="#cfefdf" opacity=".19"/>
+    </pattern>
+  </defs>
+  <rect width="772" height="250" fill="url(#back)"/>
+  <path d="M444 250c16-101 115-196 238-232 37-11 64-11 90-8v240z" fill="#74a792" opacity=".2"/>
+  <path d="M484 250c30-91 145-177 288-183v183z" fill="#b1d2b9" opacity=".19"/>
+  <path d="M524 250c29-79 135-124 248-134v134z" fill="#c8dbc1" opacity=".12"/>
+  <path d="M438 0h334v250H438z" fill="url(#grain)"/>
+  <g stroke="#dbebbd" stroke-width="1.1" fill="none" opacity=".4">
+    <path d="M424 237C476 123 598 36 748 28"/>
+    <path d="M475 251C544 152 642 115 772 105"/>
+    <path d="M646 0c-43 19-84 46-115 81"/>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="45" y="53" font-size="12" font-weight="700" letter-spacing="2.4" fill="#cbe2b5">WOOCOMMERCE STOREFRONT</text>
+    <text x="42" y="106" font-size="47" font-weight="750" letter-spacing="-2.3" fill="#fcf8ec">Recently</text>
+    <text x="42" y="155" font-size="47" font-weight="750" letter-spacing="-2.3" fill="#fcf8ec">Bought This</text>
+    <rect x="45" y="176" width="30" height="2" rx="1" fill="#e3ad79"/>
+    <text x="45" y="207" font-size="17" fill="#e2ebe2">Purchase notifications for your store</text>
+  </g>
+
+  <g filter="url(#lift)">
+    <rect x="438" y="69" width="286" height="119" rx="16" fill="#143c30" opacity=".62" transform="rotate(6 581 128.5)"/>
+    <rect x="433.5" y="62.5" width="285" height="118" rx="15.5" fill="#f9f5e9" stroke="#fdfbea"/>
+    <rect x="449" y="78" width="86" height="86" rx="10" fill="#dce7d7"/>
+    <ellipse cx="490" cy="147" rx="31" ry="5" fill="#294a38" opacity=".19"/>
+    <path d="M509 108c17-6 25 4 19 15-3 6-10 10-21 9" fill="none" stroke="#356758" stroke-width="5" stroke-linecap="round"/>
+    <path d="M468 102l5 35c2 14 34 15 37 0l5-35z" fill="url(#ceramic)"/>
+    <ellipse cx="491.5" cy="103" rx="23.5" ry="8" fill="#a6c5af"/>
+    <ellipse cx="491.5" cy="103.5" rx="19" ry="5" fill="#315d50"/>
+    <path d="M478 115l3 17" stroke="#bedbca" opacity=".52" stroke-width="2" stroke-linecap="round"/>
+    <g font-family="Segoe UI, Arial, sans-serif">
+      <text x="552" y="99" fill="#3f5849" font-size="12" font-weight="600">Recently purchased</text>
+      <text x="551" y="125" fill="#152e28" font-size="21" font-weight="750" letter-spacing="-.45">Harbor Mug</text>
+      <text x="552" y="150" fill="#53685b" font-size="12">View product</text>
+      <path d="M625 146h9m-4-4 4 4-4 4" fill="none" stroke="#53685b" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <circle cx="705" cy="71" r="18" fill="#e8bd86"/>
+    <path d="M699 71l4 4 8-9" fill="none" stroke="#263b2d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

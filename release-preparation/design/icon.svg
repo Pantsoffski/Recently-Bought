@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="symbol-title">
+  <title id="symbol-title">Recently Bought This — shopping bag with a confirmation badge</title>
+  <defs>
+    <linearGradient id="base" x2="1" y2="1">
+      <stop stop-color="#132f2a"/>
+      <stop offset="1" stop-color="#2c6651"/>
+    </linearGradient>
+    <linearGradient id="paper" x2=".75" y2="1">
+      <stop stop-color="#fdf9eb"/>
+      <stop offset="1" stop-color="#dbe8ce"/>
+    </linearGradient>
+    <clipPath id="frame"><rect width="128" height="128" rx="26"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="128" height="128" fill="url(#base)"/>
+    <path d="M33 128C51 76 100 42 128 36v92z" fill="#7aab89" opacity=".23"/>
+    <path d="M59 128c13-31 40-55 69-62v62z" fill="#cbe4b4" opacity=".14"/>
+    <path d="M19 120c21-32 43-46 66-57" fill="none" stroke="#c6e4bf" stroke-opacity=".32" stroke-width="1.25"/>
+    <path d="M36 52h53l5 42a8 8 0 0 1-8 9H38a8 8 0 0 1-8-9z" fill="#0c231e" opacity=".4" transform="translate(2 4)"/>
+    <path d="M36 47h53l5 45a8 8 0 0 1-8 9H38a8 8 0 0 1-8-9z" fill="url(#paper)"/>
+    <path d="M50 55V43a13 13 0 0 1 26 0v12" fill="none" stroke="#e9f3d9" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="50" cy="56" r="3" fill="#6d8976"/>
+    <circle cx="76" cy="56" r="3" fill="#6d8976"/>
+    <circle cx="91" cy="75" r="21" fill="#e8bd86" stroke="#22483a" stroke-width="4"/>
+    <path d="M83 75l6 6 10-12" fill="none" stroke="#233c2c" stroke-width="3.75" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

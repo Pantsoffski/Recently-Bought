@@ -122,17 +122,22 @@ if ( 'seed-legacy' === $mode ) {
 	return;
 }
 
-if ( 'migration' === $mode ) {
+if ( in_array( $mode, array( 'migration', 'migration-stage-b' ), true ) ) {
 	$expected = array( 'pnumber' => '10', 'text' => 'Someone already purchased this.', 'randomize' => '1', 'corner' => '0', 'slide_in_delay' => '0' );
 	foreach ( $expected as $key => $value ) {
 		rbt_assert( $value === get_option( 'recently_bought_settings_' . $key ), 'Lost original option: ' . $key );
 	}
-	rbt_assert( ! get_option( 'recently_bought_settings_time_display' ), 'The test must upgrade without activation.' );
-	rbt_assert( 'none' === Someone_Recently_Bought_Init::get_setting( 'time_display' ), 'Missing time option must default to none.' );
+	if ( 'migration' === $mode ) {
+		rbt_assert( ! get_option( 'recently_bought_settings_time_display' ), 'The test must upgrade without activation.' );
+		rbt_assert( 'none' === Someone_Recently_Bought_Init::get_setting( 'time_display' ), 'Missing time option must default to none.' );
+	} else {
+		rbt_assert( 'approximate' === get_option( 'recently_bought_settings_time_display' ), 'Stage B time setting must be preserved.' );
+	}
 	$notifications = Someone_Recently_Bought_Main::data_miner();
-	rbt_assert( array( 'Legacy item snapshot' ) === array_column( $notifications, 'name' ), 'The original order was not carried over.' );
-	rbt_assert( 'Someone already purchased this.' === $notifications[0]['message'] && '' === $notifications[0]['time'], 'The migrated message must appear once and omit time.' );
-	WP_CLI::success( 'Upgrade without reactivation retained five exact values, preserved the original order and disabled time.' );
+	rbt_assert( array( 'Stage A Synthetic legacy product' ) === array_column( $notifications, 'name' ), 'Use the public catalog title for the original order.' );
+	rbt_assert( 'Someone already purchased this.' === $notifications[0]['message'], 'The migrated message must appear once.' );
+	rbt_assert( ( 'migration' === $mode ) === ( '' === $notifications[0]['time'] ), 'Unexpected time label after upgrade.' );
+	WP_CLI::success( 'Upgrade without reactivation preserved configuration and rendered the public catalog name.' );
 	return;
 }
 
@@ -173,6 +178,15 @@ if ( 'settings' === $mode ) {
 	}
 	update_option( 'recently_bought_settings_text', '<strong>Fixture</strong> "O’Neil" café' );
 	rbt_assert( 'Fixture "O’Neil" café' === get_option( 'recently_bought_settings_text' ), 'Settings API must store plain text.' );
+	$subscriber = wp_insert_user( array( 'user_login' => 'rbt-local-subscriber', 'user_pass' => wp_generate_password(), 'role' => 'subscriber' ) );
+	rbt_assert( ! is_wp_error( $subscriber ), 'Cannot create test subscriber.' );
+	wp_set_current_user( $subscriber );
+	ob_start();
+	Someone_Recently_Bought_Init::options_page_rb();
+	rbt_assert( '' === ob_get_clean(), 'A subscriber must not see the settings form.' );
+	wp_set_current_user( 0 );
+	require_once ABSPATH . 'wp-admin/includes/user.php';
+	wp_delete_user( $subscriber );
 	WP_CLI::success( 'Settings validity, sanitization, empty text and legacy missing defaults.' );
 	return;
 }
@@ -219,12 +233,13 @@ if ( 'time' === $mode ) {
 if ( 'frontend' === $mode ) {
 	rbt_clear_fixtures( 'recently_bought_test_frontend' );
 	$product = rbt_product( 'Stage A Synthetic storefront product' );
+	$second  = rbt_product( 'Stage A Synthetic second product' );
 	$image   = rbt_fixture_image();
 	update_post_meta( $image, '_wp_attachment_image_alt', 'Synthetic product swatch' );
 	$product->set_image_id( $image );
 	$product->save();
-	$orders = array( rbt_order( $product, 'Second synthetic item' ), rbt_order( $product, 'Retro "O’Neil" <strong>Fixture</strong> & café' ) );
-	update_option( 'recently_bought_test_frontend', array( 'orders' => array_map( static fn( $order ) => $order->get_id(), $orders ), 'products' => array( $product->get_id() ), 'attachment' => $image ) );
+	$orders = array( rbt_order( $second, 'Second synthetic item' ), rbt_order( $product, 'TEST_PRIVATE_LINE_7391 <strong>Fixture</strong> & café' ) );
+	update_option( 'recently_bought_test_frontend', array( 'orders' => array_map( static fn( $order ) => $order->get_id(), $orders ), 'products' => array( $product->get_id(), $second->get_id() ), 'attachment' => $image ) );
 	update_option( 'recently_bought_settings_pnumber', 5 );
 	update_option( 'recently_bought_settings_text', 'Someone bought: “fixture”; const sample = 1.' );
 	update_option( 'recently_bought_settings_randomize', 0 );
@@ -264,7 +279,7 @@ if ( 'refresh' === $mode ) {
 	$orders[2]->set_date_created( current_datetime()->modify( '-8 days' )->getTimestamp() );
 	$orders[2]->save();
 	$remaining = Someone_Recently_Bought_Main::data_miner();
-	rbt_assert( array( 'Age candidate' ) === array_column( $remaining, 'name' ), 'A fresh render must drop refunded and cancelled purchases.' );
+	rbt_assert( array( 'Stage A Synthetic refresh product' ) === array_column( $remaining, 'name' ), 'A fresh render must drop refunded and cancelled purchases.' );
 	rbt_assert( 'Ordered within the last 30 days' === $remaining[0]['time'], 'A fresh render must recompute the age label.' );
 	foreach ( $orders as $order ) {
 		$order->delete( true );
@@ -285,18 +300,21 @@ rbt_assert( array() === rbt_names(), 'The order matrix must start with an empty 
 
 $product = rbt_product( 'Stage A Synthetic product', true );
 $orders  = array();
+$products = array();
 for ( $number = 1; $number <= 11; ++$number ) {
-	$orders[] = rbt_order( $product, 'Snapshot ' . $number );
+	$numbered_product = rbt_product( 'Catalog ' . $number, true );
+	$products[] = $numbered_product;
+	$orders[] = rbt_order( $numbered_product, 'Private snapshot ' . $number );
 	$count    = min( 10, $number );
 	if ( in_array( $number, array( 1, 2, 5, 10, 11 ), true ) ) {
-		rbt_assert( array_map( static fn( $i ) => 'Snapshot ' . $i, range( $number, $number - $count + 1 ) ) === rbt_names(), 'Count or ID ordering failure.' );
+		rbt_assert( array_map( static fn( $i ) => 'Catalog ' . $i, range( $number, $number - $count + 1 ) ) === rbt_names(), 'Count or ID ordering failure.' );
 	}
 }
 $created_after_switch = end( $orders );
 rbt_assert( ( 'hpos-off' !== $mode ) === ( 'shop_order' === get_post_type( $created_after_switch->get_id() ) ), 'Unexpected CPT record for a newly created order.' );
 
 update_option( 'recently_bought_settings_randomize', 1 );
-$ordered = array_map( static fn( $i ) => 'Snapshot ' . $i, range( 11, 2 ) );
+$ordered = array_map( static fn( $i ) => 'Catalog ' . $i, range( 11, 2 ) );
 rbt_assert( $ordered === rbt_names(), 'The server must keep stable ID order, including when the browser shuffles.' );
 update_option( 'recently_bought_settings_randomize', 0 );
 foreach ( $orders as $order ) {
@@ -325,7 +343,9 @@ $cases        = array(
 );
 $orders       = array();
 foreach ( $cases as $name => $parameters ) {
-	$orders[ $name ] = rbt_order( $product, $name, $parameters );
+	$case_product = rbt_product( $name, true );
+	$products[] = $case_product;
+	$orders[ $name ] = rbt_order( $case_product, 'Private item snapshot', $parameters );
 }
 rbt_refund( $orders['fully refunded'], 20, 1 );
 rbt_refund( $orders['partially refunded'], 20, 1 );
@@ -355,7 +375,7 @@ $child->set_regular_price( '20' );
 $child->save();
 $orders[]      = rbt_order( $child, 'Variant purchase snapshot' );
 $notifications = Someone_Recently_Bought_Main::data_miner();
-$expected      = array( 'Variant purchase snapshot', 'partially refunded', 'zero', 'CHEQUE confirmed', 'BACS confirmed', 'COD complete', 'COD processing', 'online confirmed' );
+$expected      = array( 'Stage A Synthetic parent', 'partially refunded', 'zero', 'CHEQUE confirmed', 'BACS confirmed', 'COD complete', 'COD processing', 'online confirmed' );
 rbt_assert( $expected === array_column( $notifications, 'name' ), 'Wrong order eligibility: ' . implode( ', ', array_column( $notifications, 'name' ) ) );
 rbt_assert( $parent->get_permalink() === $notifications[0]['url'], 'Variation link must use the parent.' );
 rbt_assert( '' === $notifications[0]['image'], 'Missing image must not add a placeholder.' );
@@ -388,4 +408,7 @@ $child->delete( true );
 $parent->delete( true );
 $private->delete( true );
 $product->delete( true );
+foreach ( $products as $test_product ) {
+	$test_product->delete( true );
+}
 WP_CLI::success( "$mode: count, limit, bounded pages, shuffle, statuses, payment, refunds, guest and digital orders, variant, empty order and unavailable products." );

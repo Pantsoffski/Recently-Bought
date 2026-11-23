@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /** Registers the plugin settings and hooks. */
 class Someone_Recently_Bought_Init {
+	private const MIN_WOOCOMMERCE = '11.2';
+
 	private const DEFAULTS = array(
 		'pnumber'        => 5,
 		'text'           => 'recently bought',
@@ -36,9 +38,14 @@ class Someone_Recently_Bought_Init {
 		add_filter( 'plugin_action_links_' . RECENTLY_BOUGHT_PLUGIN_BASENAME, array( __CLASS__, 'plugin_action_links_rb' ) );
 	}
 
-	/** Register the bundled translations. */
-	public static function load_translations() {
-		load_plugin_textdomain( 'recently-bought-this-for-woocommerce', false, dirname( RECENTLY_BOUGHT_PLUGIN_BASENAME ) . '/languages' );
+	/** Set up the plugin when the WooCommerce dependency is available. */
+	public static function plugins_loaded() {
+		if ( defined( 'WC_VERSION' ) && function_exists( 'wc_get_orders' ) && version_compare( WC_VERSION, self::MIN_WOOCOMMERCE, '>=' ) ) {
+			add_action( 'init', array( __CLASS__, 'init' ) );
+			return;
+		}
+		add_action( 'admin_notices', array( __CLASS__, 'missing_woocommerce_notice' ) );
+		add_action( 'network_admin_notices', array( __CLASS__, 'missing_woocommerce_notice' ) );
 	}
 
 	/** Initialize missing options on activation. */
@@ -148,8 +155,11 @@ class Someone_Recently_Bought_Init {
 	/** Show the dependency notice to users who can act on it. */
 	public static function missing_woocommerce_notice() {
 		if ( current_user_can( 'activate_plugins' ) || current_user_can( 'manage_network_plugins' ) ) {
+			$message = defined( 'WC_VERSION' )
+				? __( 'Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer.', 'recently-bought-this-for-woocommerce' )
+				: __( 'Recently Bought This for WooCommerce requires WooCommerce to be installed and active.', 'recently-bought-this-for-woocommerce' );
 			?>
-			<div class="notice notice-warning"><p><?php esc_html_e( 'Recently Bought This for WooCommerce requires WooCommerce to be installed and active.', 'recently-bought-this-for-woocommerce' ); ?></p></div>
+			<div class="notice notice-warning"><p><?php echo esc_html( $message ); ?></p></div>
 			<?php
 		}
 	}
@@ -158,7 +168,7 @@ class Someone_Recently_Bought_Init {
 /** Selects verified purchases and renders storefront notifications. */
 class Someone_Recently_Bought_Main {
 	private const MAX_ORDER_PAGES = 3;
-	private const ASSET_VERSION   = '0.4.0-b';
+	private const ASSET_VERSION   = '1.0.0';
 
 	/**
 	 * Storefront payload prepared for the current response.
@@ -269,11 +279,6 @@ class Someone_Recently_Bought_Main {
 				if ( ! $item instanceof WC_Order_Item_Product || $item->get_quantity() <= 0 || ! self::has_remaining_purchase( $order, $item ) ) {
 					continue;
 				}
-				$name = $item->get_name();
-				if ( '' === trim( $name ) ) {
-					continue;
-				}
-
 				$product_id = $item->get_product_id();
 				if ( ! array_key_exists( $product_id, $products ) ) {
 					$products[ $product_id ] = self::product_presentation( $product_id );
@@ -284,7 +289,6 @@ class Someone_Recently_Bought_Main {
 
 				$time            = self::purchase_time_label( $order->get_date_created(), $now );
 				$notifications[] = $products[ $product_id ] + array(
-					'name'    => $name,
 					'message' => '' === $time ? $neutral_message : $message,
 					'time'    => $include_time ? $time : '',
 				);
@@ -311,12 +315,15 @@ class Someone_Recently_Bought_Main {
 		if ( ! $product || 'publish' !== $product->get_status() || ! is_post_type_viewable( get_post_type( $product_id ) ) || '' !== get_post_field( 'post_password', $product_id ) ) {
 			return null;
 		}
-		$url = sanitize_url( $product->get_permalink(), array( 'http', 'https' ) );
-		if ( '' === $url ) {
+		// Use the catalog title. An order item name may include customer-specific personalization.
+		$name = $product->get_name( 'edit' );
+		$url  = sanitize_url( $product->get_permalink(), array( 'http', 'https' ) );
+		if ( '' === $url || '' === trim( $name ) ) {
 			return null;
 		}
 		return array(
 			'url'   => $url,
+			'name'  => $name,
 			'image' => $product->get_image(
 				'shop_thumbnail',
 				array(

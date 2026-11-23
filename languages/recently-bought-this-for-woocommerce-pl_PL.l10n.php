@@ -1,18 +1,30 @@
 <?php
 /**
- * Polish translations.
+ * Polish translation generated from the accompanying PO catalog.
  *
  * @package Recently_Bought_This
  */
 
 return array(
-	'language' => 'pl_PL',
-	'messages' => array(
+	'domain'             => 'recently-bought-this-for-woocommerce',
+	'plural-forms'       => 'nplurals=3; plural=(n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);',
+	'language'           => 'pl_PL',
+	'project-id-version' => 'Recently Bought This for WooCommerce 1.0.0',
+	'pot-creation-date'  => '2026-11-23T15:26:08+00:00',
+	'po-revision-date'   => '2026-11-23T15:26:45+00:00',
+	'x-generator'        => 'WP-CLI 2.12.0',
+	'messages'           => array(
+		'Recently Bought This for WooCommerce'            => 'Recently Bought This for WooCommerce',
+		'https://wordpress.org/plugins/recently-bought-this-for-woocommerce/' => 'https://wordpress.org/plugins/recently-bought-this-for-woocommerce/',
+		'Show linked product notifications for confirmed WooCommerce orders without revealing buyer details.' => 'Wyświetlaj powiadomienia o potwierdzonych zamówieniach WooCommerce z linkami do produktów, bez ujawniania danych kupujących.',
+		'Piotr Pesta'                                     => 'Piotr Pesta',
+		'https://profiles.wordpress.org/piotr-pesta/'     => 'https://profiles.wordpress.org/piotr-pesta/',
 		'Recently Bought'                                 => 'Ostatnie zakupy',
-		'Recent purchases'                                => 'Ostatnie zakupy',
-		'Close notification'                              => 'Zamknij powiadomienie',
 		'Settings'                                        => 'Ustawienia',
+		'Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer.' => 'Recently Bought This for WooCommerce wymaga WooCommerce 11.2 lub nowszego.',
 		'Recently Bought This for WooCommerce requires WooCommerce to be installed and active.' => 'Recently Bought This for WooCommerce wymaga zainstalowanej i aktywnej wtyczki WooCommerce.',
+		'Close notification'                              => 'Zamknij powiadomienie',
+		'Recent purchases'                                => 'Ostatnie zakupy',
 		'Purchased in this store'                         => 'Kupiono w tym sklepie',
 		'Someone recently bought'                         => 'Ktoś niedawno kupił',
 		'Ordered today'                                   => 'Zamówiono dzisiaj',

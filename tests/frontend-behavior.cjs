@@ -2,7 +2,8 @@ const assert = require( 'node:assert/strict' );
 const path = require( 'node:path' );
 const { chromium } = require( 'playwright' );
 
-const origin = 'http://127.0.0.1:38989';
+const origin = process.env.RBT_TEST_ORIGIN || 'http://127.0.0.1:38989';
+assert.match( origin, /^http:\/\/127\.0\.0\.1:\d+$/ );
 const fixtureOrigin = 'https://storefront.example.test';
 const selector = '.recently-bought-dialog';
 
@@ -163,6 +164,18 @@ async function checkInteraction( browser, fixture ) {
 }
 
 async function checkCookiesAndCachedMarkup( browser, fixture ) {
+	const tabs = await fixtureContext( browser, fixture, { count: 1 } );
+	const first = await start( tabs, '/shop-a/', true );
+	const other = await start( tabs, '/shop-a/', true );
+	await first.clock.runFor( 300 );
+	await other.clock.runFor( 300 );
+	await first.locator( selector ).getByRole( 'button' ).evaluate( ( button ) => button.click() );
+	await other.clock.runFor( 5200 );
+	assert.equal( await other.locator( selector ).count(), 0 );
+	const [ heldCookie ] = await tabs.cookies();
+	assert( Math.abs( heldCookie.expires - Date.now() / 1000 - 600 ) < 3, 'Natural completion in another tab must preserve a manual dismissal.' );
+	await tabs.close();
+
 	const blocked = await fixtureContext( browser, fixture, { count: 2 } );
 	await blocked.addInitScript( () => {
 		Object.defineProperty( document, 'cookie', {

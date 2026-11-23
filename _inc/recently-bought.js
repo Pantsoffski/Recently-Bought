@@ -88,7 +88,9 @@
 				$dialog.notice( 'option', 'hide', motion.matches ?
 					false : { effect: 'fadeOut', duration: 1000 } );
 				stop();
-				rememberDismissal( settings, automatic ? 15 : 600 );
+				if ( ! automatic || ! isDismissed( settings.cookieName ) ) {
+					rememberDismissal( settings, automatic ? 15 : 600 );
+				}
 			},
 			close: function () {
 				$dialog.notice( 'destroy' ).remove();

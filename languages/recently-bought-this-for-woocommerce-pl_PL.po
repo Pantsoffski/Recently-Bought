@@ -1,0 +1,160 @@
+# Copyright (C) 2026 Piotr Pesta
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Recently Bought This for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/recently-bought-this-for-woocommerce/\n"
+"POT-Creation-Date: 2026-11-23T15:26:08+00:00\n"
+"Language-Team: Polski\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Domain: recently-bought-this-for-woocommerce\n"
+"X-Generator: WP-CLI 2.12.0\n"
+
+#. Plugin Name of the plugin
+#: pp-recently-bought-for-woocommerce.php
+msgid "Recently Bought This for WooCommerce"
+msgstr "Recently Bought This for WooCommerce"
+
+#. Plugin URI of the plugin
+#: pp-recently-bought-for-woocommerce.php
+msgid "https://wordpress.org/plugins/recently-bought-this-for-woocommerce/"
+msgstr "https://wordpress.org/plugins/recently-bought-this-for-woocommerce/"
+
+#. Description of the plugin
+#: pp-recently-bought-for-woocommerce.php
+msgid ""
+"Show linked product notifications for confirmed WooCommerce orders without "
+"revealing buyer details."
+msgstr ""
+"Wyświetlaj powiadomienia o potwierdzonych zamówieniach WooCommerce z linkami"
+" do produktów, bez ujawniania danych kupujących."
+
+#. Author of the plugin
+#: pp-recently-bought-for-woocommerce.php
+msgid "Piotr Pesta"
+msgstr "Piotr Pesta"
+
+#. Author URI of the plugin
+#: pp-recently-bought-for-woocommerce.php
+msgid "https://profiles.wordpress.org/piotr-pesta/"
+msgstr "https://profiles.wordpress.org/piotr-pesta/"
+
+#: classes.php:129
+msgid "Recently Bought"
+msgstr "Ostatnie zakupy"
+
+#: classes.php:149
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: classes.php:159
+msgid ""
+"Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer."
+msgstr ""
+"Recently Bought This for WooCommerce wymaga WooCommerce 11.2 lub nowszego."
+
+#: classes.php:160
+msgid ""
+"Recently Bought This for WooCommerce requires WooCommerce to be installed "
+"and active."
+msgstr ""
+"Recently Bought This for WooCommerce wymaga zainstalowanej i aktywnej "
+"wtyczki WooCommerce."
+
+#: classes.php:201
+msgid "Close notification"
+msgstr "Zamknij powiadomienie"
+
+#: classes.php:222
+msgid "Recent purchases"
+msgstr "Ostatnie zakupy"
+
+#: classes.php:253
+msgid "Purchased in this store"
+msgstr "Kupiono w tym sklepie"
+
+#: classes.php:256
+msgid "Someone recently bought"
+msgstr "Ktoś niedawno kupił"
+
+#: classes.php:416
+msgid "Ordered today"
+msgstr "Zamówiono dzisiaj"
+
+#: classes.php:419
+msgid "Ordered yesterday"
+msgstr "Zamówiono wczoraj"
+
+#: classes.php:422
+msgid "Ordered within the last 7 days"
+msgstr "Zamówiono w ostatnich 7 dniach"
+
+#: classes.php:425
+msgid "Ordered within the last 30 days"
+msgstr "Zamówiono w ostatnich 30 dniach"
+
+#: views/options.php:16
+msgid "Recently Bought This for WooCommerce - Settings"
+msgstr "Recently Bought This for WooCommerce – ustawienia"
+
+#: views/options.php:24
+msgid "Text to show:"
+msgstr "Wyświetlany tekst:"
+
+#: views/options.php:27
+msgid ""
+"Enter the complete message as plain text. The default “recently bought” "
+"displays as “Someone recently bought”. Leaving the field empty displays "
+"“Purchased in this store”."
+msgstr ""
+"Wpisz cały komunikat jako zwykły tekst. Domyślna wartość „recently bought” "
+"wyświetla się jako „Ktoś niedawno kupił”. Puste pole wyświetla komunikat "
+"„Kupiono w tym sklepie”."
+
+#: views/options.php:31
+msgid "Number of orders to show (2-10):"
+msgstr "Liczba wyświetlanych zamówień (2–10):"
+
+#: views/options.php:35
+msgid "In which shop corner you wish to show it?"
+msgstr "W którym narożniku wyświetlać powiadomienia?"
+
+#: views/options.php:38
+msgid "Right-Top"
+msgstr "Prawy górny"
+
+#: views/options.php:39
+msgid "Right-Bottom"
+msgstr "Prawy dolny"
+
+#: views/options.php:40
+msgid "Left-Bottom"
+msgstr "Lewy dolny"
+
+#: views/options.php:41
+msgid "Left-Top"
+msgstr "Lewy górny"
+
+#: views/options.php:46
+msgid "Randomize orders:"
+msgstr "Losowa kolejność zamówień:"
+
+#: views/options.php:50
+msgid "Popup after some delay (0-30 seconds):"
+msgstr "Opóźnienie powiadomienia (0–30 sekund):"
+
+#: views/options.php:54
+msgid "Purchase time information"
+msgstr "Informacja o czasie zakupu"
+
+#: views/options.php:57
+msgid "Do not display purchase time"
+msgstr "Nie pokazuj czasu zakupu"
+
+#: views/options.php:58
+msgid "Display approximate purchase time"
+msgstr "Pokazuj przybliżony czas zakupu"
