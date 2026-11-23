@@ -2,9 +2,10 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Recently Bought This for WooCommerce 1.0.0\n"
+"Project-Id-Version: Recently Bought This for WooCommerce 1.0.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/recently-bought-this-for-woocommerce/\n"
-"POT-Creation-Date: 2026-11-23T15:26:08+00:00\n"
+"POT-Creation-Date: 2026-11-23T16:36:19+00:00\n"
+"PO-Revision-Date: 2026-11-23T16:37:00+00:00\n"
 "Language-Team: Polski\n"
 "Language: pl_PL\n"
 "MIME-Version: 1.0\n"
@@ -26,9 +27,7 @@ msgstr "https://wordpress.org/plugins/recently-bought-this-for-woocommerce/"
 
 #. Description of the plugin
 #: pp-recently-bought-for-woocommerce.php
-msgid ""
-"Show linked product notifications for confirmed WooCommerce orders without "
-"revealing buyer details."
+msgid "Show linked product notifications for confirmed WooCommerce orders without revealing buyer details."
 msgstr ""
 "Wyświetlaj powiadomienia o potwierdzonych zamówieniach WooCommerce z linkami"
 " do produktów, bez ujawniania danych kupujących."
@@ -43,59 +42,56 @@ msgstr "Piotr Pesta"
 msgid "https://profiles.wordpress.org/piotr-pesta/"
 msgstr "https://profiles.wordpress.org/piotr-pesta/"
 
-#: classes.php:129
+#: classes.php:105
+msgid "Ordered today"
+msgstr "Zamówiono dzisiaj"
+
+#: classes.php:106
+msgid "Ordered yesterday"
+msgstr "Zamówiono wczoraj"
+
+#: classes.php:107
+msgid "Ordered within the last 7 days"
+msgstr "Zamówiono w ostatnich 7 dniach"
+
+#: classes.php:108
+msgid "Ordered within the last 30 days"
+msgstr "Zamówiono w ostatnich 30 dniach"
+
+#: classes.php:109
+msgid "Purchased in this store"
+msgstr "Kupiono w tym sklepie"
+
+#: classes.php:161
 msgid "Recently Bought"
 msgstr "Ostatnie zakupy"
 
-#: classes.php:149
+#: classes.php:181
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: classes.php:159
-msgid ""
-"Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer."
+#: classes.php:191
+msgid "Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer."
 msgstr ""
 "Recently Bought This for WooCommerce wymaga WooCommerce 11.2 lub nowszego."
 
-#: classes.php:160
-msgid ""
-"Recently Bought This for WooCommerce requires WooCommerce to be installed "
-"and active."
+#: classes.php:192
+msgid "Recently Bought This for WooCommerce requires WooCommerce to be installed and active."
 msgstr ""
 "Recently Bought This for WooCommerce wymaga zainstalowanej i aktywnej "
 "wtyczki WooCommerce."
 
-#: classes.php:201
+#: classes.php:233
 msgid "Close notification"
 msgstr "Zamknij powiadomienie"
 
-#: classes.php:222
+#: classes.php:254
 msgid "Recent purchases"
 msgstr "Ostatnie zakupy"
 
-#: classes.php:253
-msgid "Purchased in this store"
-msgstr "Kupiono w tym sklepie"
-
-#: classes.php:256
+#: classes.php:288
 msgid "Someone recently bought"
 msgstr "Ktoś niedawno kupił"
-
-#: classes.php:416
-msgid "Ordered today"
-msgstr "Zamówiono dzisiaj"
-
-#: classes.php:419
-msgid "Ordered yesterday"
-msgstr "Zamówiono wczoraj"
-
-#: classes.php:422
-msgid "Ordered within the last 7 days"
-msgstr "Zamówiono w ostatnich 7 dniach"
-
-#: classes.php:425
-msgid "Ordered within the last 30 days"
-msgstr "Zamówiono w ostatnich 30 dniach"
 
 #: views/options.php:16
 msgid "Recently Bought This for WooCommerce - Settings"
@@ -106,55 +102,57 @@ msgid "Text to show:"
 msgstr "Wyświetlany tekst:"
 
 #: views/options.php:27
-msgid ""
-"Enter the complete message as plain text. The default “recently bought” "
-"displays as “Someone recently bought”. Leaving the field empty displays "
-"“Purchased in this store”."
-msgstr ""
-"Wpisz cały komunikat jako zwykły tekst. Domyślna wartość „recently bought” "
-"wyświetla się jako „Ktoś niedawno kupił”. Puste pole wyświetla komunikat "
-"„Kupiono w tym sklepie”."
+msgid "Enter the complete message as plain text. The default “recently bought” displays as “Someone recently bought”. Leaving the field empty uses the neutral purchase message below."
+msgstr "Wpisz cały komunikat jako zwykły tekst. Domyślna wartość „recently bought” wyświetla się jako „Ktoś niedawno kupił”. Puste pole używa ustawionego poniżej neutralnego komunikatu o zakupie."
 
-#: views/options.php:31
+#: views/options.php:32
+msgid "Notification texts"
+msgstr "Teksty powiadomień"
+
+#: views/options.php:33
+msgid "Leave blank to use the WordPress translation."
+msgstr "Pozostaw puste, aby użyć tłumaczenia WordPressa."
+
+#: views/options.php:47
 msgid "Number of orders to show (2-10):"
 msgstr "Liczba wyświetlanych zamówień (2–10):"
 
-#: views/options.php:35
+#: views/options.php:51
 msgid "In which shop corner you wish to show it?"
 msgstr "W którym narożniku wyświetlać powiadomienia?"
 
-#: views/options.php:38
+#: views/options.php:54
 msgid "Right-Top"
 msgstr "Prawy górny"
 
-#: views/options.php:39
+#: views/options.php:55
 msgid "Right-Bottom"
 msgstr "Prawy dolny"
 
-#: views/options.php:40
+#: views/options.php:56
 msgid "Left-Bottom"
 msgstr "Lewy dolny"
 
-#: views/options.php:41
+#: views/options.php:57
 msgid "Left-Top"
 msgstr "Lewy górny"
 
-#: views/options.php:46
+#: views/options.php:62
 msgid "Randomize orders:"
 msgstr "Losowa kolejność zamówień:"
 
-#: views/options.php:50
+#: views/options.php:66
 msgid "Popup after some delay (0-30 seconds):"
 msgstr "Opóźnienie powiadomienia (0–30 sekund):"
 
-#: views/options.php:54
+#: views/options.php:70
 msgid "Purchase time information"
 msgstr "Informacja o czasie zakupu"
 
-#: views/options.php:57
+#: views/options.php:73
 msgid "Do not display purchase time"
 msgstr "Nie pokazuj czasu zakupu"
 
-#: views/options.php:58
+#: views/options.php:74
 msgid "Display approximate purchase time"
 msgstr "Pokazuj przybliżony czas zakupu"

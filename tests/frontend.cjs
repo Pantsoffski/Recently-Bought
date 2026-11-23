@@ -52,6 +52,39 @@ async function checkNotice( admin, visitors ) {
 	console.log( 'PASS missing WooCommerce: admin notice and clean storefront, REST and AJAX.' );
 }
 
+async function checkEditableTexts( admin, visitors ) {
+	const fields = admin.locator( 'input[name^="recently_bought_settings_text_"]' );
+	const hints = [ 'Ordered today', 'Ordered yesterday', 'Ordered within the last 7 days', 'Ordered within the last 30 days', 'Purchased in this store' ];
+	const values = [ '<script></script><img onerror="">Dziś & včera', 'Objednáno včera', 'Objednáno v posledních 7 dnech', 'Objednáno v posledních 30 dnech', 'Zakoupeno v tomto obchodě' ];
+	assert.equal( await fields.count(), 5 );
+	for ( const [ index, hint ] of hints.entries() ) {
+		assert.equal( await fields.nth( index ).getAttribute( 'placeholder' ), hint );
+		await fields.nth( index ).fill( values[ index ] );
+	}
+	await admin.locator( '#recently-bought-text' ).fill( 'Někdo nedávno koupil' );
+	await admin.locator( '#recently-bought-delay' ).fill( '0' );
+	await admin.locator( 'input[name="recently_bought_settings_time_display"][value="approximate"]' ).check();
+	await admin.locator( '#submit' ).click();
+	await admin.waitForURL( '**&settings-updated=true' );
+	assert.equal( await fields.nth( 0 ).inputValue(), 'Dziś & včera' );
+	assert.equal( await fields.nth( 4 ).inputValue(), values[ 4 ] );
+	const page = await visitors.newPage();
+	await page.goto( '/' );
+	const copy = page.locator( '.fixed-dialog .recently-bought-copy' );
+	await copy.getByText( 'Někdo nedávno koupil' ).waitFor();
+	assert.match( await copy.locator( 'small' ).textContent(), /^(Dziś & včera|Objednáno včera)$/ );
+	assert.equal( await copy.locator( 'script, img, [onerror]' ).count(), 0 );
+	assertPrivate( await page.content() );
+	await page.close();
+	for ( const field of await fields.all() ) {
+		await field.fill( '' );
+	}
+	await admin.locator( '#recently-bought-text' ).fill( 'Someone bought: “fixture”; const sample = 1.' );
+	await admin.locator( '#submit' ).click();
+	await admin.waitForURL( '**&settings-updated=true' );
+	console.log( 'PASS Settings API form, translated placeholders, custom Unicode text and escaped storefront DOM.' );
+}
+
 async function checkCorner( visitors, corner, approximate, delay ) {
 	const page = await visitors.newPage();
 	const errors = [];
@@ -153,6 +186,9 @@ async function run() {
 		await admin.getByText( 'Purchase time information', { exact: true } ).waitFor();
 		const nonceCheck = await admin.request.post( '/wp-admin/options.php', { form: { option_page: 'recently_bought_settings_group', action: 'update', recently_bought_settings_text: 'Synthetic settings test' } } );
 		assert.equal( nonceCheck.status(), 403 );
+		const textVisitors = await openLocalContext( browser, { width: 1280, height: 900 } );
+		await checkEditableTexts( admin, textVisitors );
+		await textVisitors.close();
 		for ( let corner = 0; corner < 4; ++corner ) {
 			const approximate = corner % 2 === 1;
 			const delay = corner === 3 ? 30 : 0;

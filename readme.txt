@@ -4,7 +4,7 @@ Tags: purchase notifications, ecommerce, storefront, hpos
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ Recently Bought This displays compact purchase notifications on your WooCommerce
 
 * Choose one of four screen corners.
 * Show 2 to 10 notifications, with an optional random order.
-* Use the default purchase message or enter your own plain-text message.
+* Customize the main purchase message, four approximate time labels and the neutral purchase message.
 * Set an opening delay of 0 to 30 seconds.
 * Show approximate order times or leave them off, which is the default.
 * Use the widget with either legacy order storage or High-Performance Order Storage (HPOS), with or without synchronization.
@@ -41,7 +41,11 @@ Fully refunded orders, fully refunded first items and refunds with no reliable i
 
 = How is order time shown? =
 
-The optional label uses the order creation date in the store's timezone. Labels include today, yesterday, the last 7 days and the last 30 days. Older orders use a neutral purchase message. The notification never publishes an exact order timestamp.
+The optional label uses the order creation date in the store's timezone. Labels include today, yesterday, the last 7 days and the last 30 days. Older orders use the neutral purchase message. The notification never publishes an exact order timestamp.
+
+= Can I change the notification text? =
+
+Use the text settings to edit the main message, each of the four time labels and the neutral message. Leave any of the five new fields blank to use the current WordPress translation, with English as the fallback. Custom text is used in every language and supports Unicode. Leaving the main message blank uses the neutral message.
 
 = Which product name is shown? =
 
@@ -68,6 +72,9 @@ A cached page can retain older products and time labels. Clear or expire the aff
 
 == Changelog ==
 
+= 1.0.1 =
+* Add editable text for the four approximate time labels and the neutral purchase message.
+
 = 1.0.0 =
 * Support WooCommerce HPOS, with and without synchronization, and select confirmed purchases through the WooCommerce order API.
 * Remove buyer details and use public catalog product names instead of personalized order item names.
@@ -84,6 +91,9 @@ A cached page can retain older products and time labels. Clear or expire the aff
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Adds five optional text settings. Existing settings are preserved.
 
 = 1.0.0 =
 Requires WordPress 7.0, WooCommerce 11.2 and PHP 8.2. Purge storefront page and CDN caches after upgrading from 0.4.0 to remove HTML that could contain buyer names.

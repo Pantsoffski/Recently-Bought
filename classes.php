@@ -20,6 +20,11 @@ class Someone_Recently_Bought_Init {
 		'corner'         => 1,
 		'slide_in_delay' => 1,
 		'time_display'   => 'none',
+		'text_today'     => '',
+		'text_yesterday' => '',
+		'text_last_7'    => '',
+		'text_last_30'   => '',
+		'text_neutral'   => '',
 	);
 
 	private const RANGES = array(
@@ -90,6 +95,33 @@ class Someone_Recently_Bought_Init {
 	}
 
 	/**
+	 * Get the translated default for a customizable notification label.
+	 *
+	 * @param string $key Notification text setting suffix.
+	 * @return string Label in the current WordPress locale.
+	 */
+	public static function default_notification_text( $key ) {
+		return match ( $key ) {
+			'text_today'     => __( 'Ordered today', 'recently-bought-this-for-woocommerce' ),
+			'text_yesterday' => __( 'Ordered yesterday', 'recently-bought-this-for-woocommerce' ),
+			'text_last_7'    => __( 'Ordered within the last 7 days', 'recently-bought-this-for-woocommerce' ),
+			'text_last_30'   => __( 'Ordered within the last 30 days', 'recently-bought-this-for-woocommerce' ),
+			'text_neutral'   => __( 'Purchased in this store', 'recently-bought-this-for-woocommerce' ),
+		};
+	}
+
+	/**
+	 * Resolve a notification label with a per-field translation fallback.
+	 *
+	 * @param string $key Notification text setting suffix.
+	 * @return string Plain-text label.
+	 */
+	public static function notification_text( $key ) {
+		$text = self::get_setting( $key );
+		return '' === $text ? self::default_notification_text( $key ) : $text;
+	}
+
+	/**
 	 * Apply identical validation at save and read time.
 	 *
 	 * @param string $key   Setting suffix.
@@ -99,7 +131,7 @@ class Someone_Recently_Bought_Init {
 	private static function normalize_setting( $key, $value ) {
 		$default = self::DEFAULTS[ $key ];
 
-		if ( 'text' === $key ) {
+		if ( 'text' === $key || '' === $default ) {
 			return is_string( $value ) ? sanitize_text_field( $value ) : $default;
 		}
 
@@ -168,7 +200,7 @@ class Someone_Recently_Bought_Init {
 /** Selects verified purchases and renders storefront notifications. */
 class Someone_Recently_Bought_Main {
 	private const MAX_ORDER_PAGES = 3;
-	private const ASSET_VERSION   = '1.0.0';
+	private const ASSET_VERSION   = '1.0.1';
 
 	/**
 	 * Storefront payload prepared for the current response.
@@ -250,7 +282,7 @@ class Someone_Recently_Bought_Main {
 		$text            = Someone_Recently_Bought_Init::get_setting( 'text' );
 		$include_time    = 'approximate' === Someone_Recently_Bought_Init::get_setting( 'time_display' );
 		$now             = new DateTimeImmutable( 'now', new DateTimeZone( wc_timezone_string() ) );
-		$neutral_message = __( 'Purchased in this store', 'recently-bought-this-for-woocommerce' );
+		$neutral_message = Someone_Recently_Bought_Init::notification_text( 'text_neutral' );
 		$message         = $text;
 		if ( 'recently bought' === $text ) {
 			$message = __( 'Someone recently bought', 'recently-bought-this-for-woocommerce' );
@@ -413,16 +445,16 @@ class Someone_Recently_Bought_Main {
 		$order_day = $now->setTimestamp( $created->getTimestamp() )->setTime( 0, 0 );
 		$days      = $order_day->diff( $now->setTime( 0, 0 ) )->days;
 		if ( 0 === $days ) {
-			return __( 'Ordered today', 'recently-bought-this-for-woocommerce' );
+			return Someone_Recently_Bought_Init::notification_text( 'text_today' );
 		}
 		if ( 1 === $days ) {
-			return __( 'Ordered yesterday', 'recently-bought-this-for-woocommerce' );
+			return Someone_Recently_Bought_Init::notification_text( 'text_yesterday' );
 		}
 		if ( $days <= 7 ) {
-			return __( 'Ordered within the last 7 days', 'recently-bought-this-for-woocommerce' );
+			return Someone_Recently_Bought_Init::notification_text( 'text_last_7' );
 		}
 		if ( $days <= 30 ) {
-			return __( 'Ordered within the last 30 days', 'recently-bought-this-for-woocommerce' );
+			return Someone_Recently_Bought_Init::notification_text( 'text_last_30' );
 		}
 		return '';
 	}

@@ -1,4 +1,16 @@
-# Recently Bought This for WooCommerce 1.0.0
+# Recently Bought This for WooCommerce
+
+## Kandydat 1.0.1
+
+[Manifest bieżącej wersji](manifest.json) obejmuje instalowalny ZIP i osiem grafik. W tym wydaniu aktualizacji w katalogu WordPress.org wymaga tylko `screenshot-2.png`. Plansze przedstawiają historyczny zestaw 1.0.0.
+
+Odtworzenie paczki 1.0.1 z bieżącego kodu
+
+```powershell
+python release-preparation/build-zip.py release-preparation/recently-bought-this-for-woocommerce-1.0.1.zip
+```
+
+## Archiwum kontroli 1.0.0
 
 Kandydat do oceny właściciela. Macierz zweryfikowana 23 listopada 2026 r. w lokalnym Dockerze na danych syntetycznych.
 
@@ -30,7 +42,7 @@ Wtyczka nadal wymaga `date_paid` i `transaction_id` dla zamówień online. Przej
 
 ## Paczka i materiały
 
-Zbuduj lokalną kopię po sklonowaniu repozytorium poleceniem poniżej. Porównaj rozmiar i SHA-256 z [manifestem](manifest.json).
+Zbuduj lokalną kopię na zatwierdzonym commicie 1.0.0 poleceniem poniżej. Porównaj rozmiar i SHA-256 z [manifestem 1.0.0](https://github.com/Pantsoffski/Recently-Bought/blob/d1bb76b0d5c2afe8ebca75576225b122a05e2011/release-preparation/manifest.json).
 
 ```powershell
 python release-preparation/build-zip.py release-preparation/recently-bought-this-for-woocommerce-1.0.0.zip

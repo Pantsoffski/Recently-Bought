@@ -5,6 +5,7 @@ const { chromium } = require( 'playwright' );
 const origin = process.env.RBT_TEST_ORIGIN;
 assert.match( origin || '', /^http:\/\/127\.0\.0\.1:\d+$/ );
 const output = process.argv[ 2 ];
+const settingsOnly = process.argv.includes( '--settings-only' );
 const settingsURL = '/wp-admin/admin.php?page=recently-bought-settings';
 
 async function open( browser, viewport, colorScheme = 'light' ) {
@@ -36,10 +37,12 @@ async function storefront( browser, filename, viewport, colorScheme, showTime ) 
 ( async () => {
 	const browser = await chromium.launch();
 	try {
-		await storefront( browser, 'screenshot-1.png', { width: 1440, height: 1040 }, 'light', false );
-		await storefront( browser, 'screenshot-4.png', { width: 390, height: 900 }, 'light', false );
+		if ( ! settingsOnly ) {
+			await storefront( browser, 'screenshot-1.png', { width: 1440, height: 1040 }, 'light', false );
+			await storefront( browser, 'screenshot-4.png', { width: 390, height: 900 }, 'light', false );
+		}
 
-		const admin = await open( browser, { width: 1280, height: 900 } );
+		const admin = await open( browser, { width: 1280, height: settingsOnly ? 1250 : 900 } );
 		const page = await admin.newPage();
 		await page.goto( '/wp-login.php' );
 		await page.locator( '#user_login' ).fill( 'stageadmin' );
@@ -48,7 +51,17 @@ async function storefront( browser, filename, viewport, colorScheme, showTime ) 
 		await page.waitForURL( '**/wp-admin/**' );
 		await page.goto( settingsURL );
 		await page.getByText( 'Purchase time information', { exact: true } ).waitFor();
+		if ( settingsOnly ) {
+			await page.getByRole( 'heading', { name: 'Notification texts' } ).waitFor();
+			assert.equal( await page.locator( 'input[name^="recently_bought_settings_text_"]' ).count(), 5 );
+			assert( ( await page.getByRole( 'button', { name: 'Save Changes' } ).boundingBox() ).y < 1180 );
+		}
+		await page.evaluate( () => document.fonts.ready );
 		await page.screenshot( { path: path.join( output, 'screenshot-2.png' ) } );
+		if ( settingsOnly ) {
+			console.log( 'PASS authentic WordPress settings screenshot with all five new fields.' );
+			return;
+		}
 
 		await page.locator( 'input[name="recently_bought_settings_time_display"][value="approximate"]' ).check();
 		await page.locator( '#submit' ).click();

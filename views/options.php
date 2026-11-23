@@ -24,9 +24,25 @@ $recently_bought_time_display = Someone_Recently_Bought_Init::get_setting( 'time
 				<th scope="row"><label for="recently-bought-text"><?php esc_html_e( 'Text to show:', 'recently-bought-this-for-woocommerce' ); ?></label></th>
 				<td>
 					<input id="recently-bought-text" type="text" name="recently_bought_settings_text" value="<?php echo esc_attr( Someone_Recently_Bought_Init::get_setting( 'text' ) ); ?>" aria-describedby="recently-bought-text-description">
-					<p id="recently-bought-text-description" class="description"><?php esc_html_e( 'Enter the complete message as plain text. The default “recently bought” displays as “Someone recently bought”. Leaving the field empty displays “Purchased in this store”.', 'recently-bought-this-for-woocommerce' ); ?></p>
+					<p id="recently-bought-text-description" class="description"><?php esc_html_e( 'Enter the complete message as plain text. The default “recently bought” displays as “Someone recently bought”. Leaving the field empty uses the neutral purchase message below.', 'recently-bought-this-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
+			<tr>
+				<td colspan="2">
+					<h3><?php esc_html_e( 'Notification texts', 'recently-bought-this-for-woocommerce' ); ?></h3>
+					<p id="recently-bought-notification-texts-description" class="description"><?php esc_html_e( 'Leave blank to use the WordPress translation.', 'recently-bought-this-for-woocommerce' ); ?></p>
+				</td>
+			</tr>
+			<?php foreach ( array( 'text_today', 'text_yesterday', 'text_last_7', 'text_last_30', 'text_neutral' ) as $recently_bought_text_key ) : ?>
+				<?php
+				$recently_bought_text_id    = 'recently-bought-' . $recently_bought_text_key;
+				$recently_bought_text_label = Someone_Recently_Bought_Init::default_notification_text( $recently_bought_text_key );
+				?>
+				<tr>
+					<th scope="row"><label for="<?php echo esc_attr( $recently_bought_text_id ); ?>"><?php echo esc_html( $recently_bought_text_label ); ?></label></th>
+					<td><input id="<?php echo esc_attr( $recently_bought_text_id ); ?>" type="text" class="regular-text" name="<?php echo esc_attr( 'recently_bought_settings_' . $recently_bought_text_key ); ?>" value="<?php echo esc_attr( Someone_Recently_Bought_Init::get_setting( $recently_bought_text_key ) ); ?>" placeholder="<?php echo esc_attr( $recently_bought_text_label ); ?>" aria-describedby="recently-bought-notification-texts-description"></td>
+				</tr>
+			<?php endforeach; ?>
 			<tr>
 				<th scope="row"><label for="recently-bought-number"><?php esc_html_e( 'Number of orders to show (2-10):', 'recently-bought-this-for-woocommerce' ); ?></label></th>
 				<td><input id="recently-bought-number" type="number" name="recently_bought_settings_pnumber" value="<?php echo esc_attr( Someone_Recently_Bought_Init::get_setting( 'pnumber' ) ); ?>" min="2" max="10"></td>

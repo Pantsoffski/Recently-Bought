@@ -103,14 +103,16 @@ function rbt_fixture_image() {
 	return wp_insert_attachment( array( 'post_title' => 'Synthetic product thumbnail', 'post_mime_type' => 'image/png' ), $uploaded['file'] );
 }
 
-$mode = $args[0] ?? '';
+$mode      = $args[0] ?? '';
+$text_keys = array( 'text_today', 'text_yesterday', 'text_last_7', 'text_last_30', 'text_neutral' );
 if ( 'fresh' === $mode || 'uninstalled' === $mode ) {
 	$defaults = array( 'pnumber' => '5', 'text' => 'recently bought', 'randomize' => '0', 'corner' => '1', 'slide_in_delay' => '1', 'time_display' => 'none' );
+	$defaults += array_fill_keys( $text_keys, '' );
 	foreach ( $defaults as $key => $default ) {
 		$expected = 'fresh' === $mode ? $default : false;
 		rbt_assert( $expected === get_option( 'recently_bought_settings_' . $key ), 'Incorrect activation or uninstall value: ' . $key );
 	}
-	WP_CLI::success( "$mode: all six options have the expected lifecycle." );
+	WP_CLI::success( "$mode: all eleven options have the expected lifecycle." );
 	return;
 }
 
@@ -122,7 +124,7 @@ if ( 'seed-legacy' === $mode ) {
 	return;
 }
 
-if ( in_array( $mode, array( 'migration', 'migration-stage-b' ), true ) ) {
+if ( in_array( $mode, array( 'migration', 'migration-1.0.0' ), true ) ) {
 	$expected = array( 'pnumber' => '10', 'text' => 'Someone already purchased this.', 'randomize' => '1', 'corner' => '0', 'slide_in_delay' => '0' );
 	foreach ( $expected as $key => $value ) {
 		rbt_assert( $value === get_option( 'recently_bought_settings_' . $key ), 'Lost original option: ' . $key );
@@ -131,13 +133,74 @@ if ( in_array( $mode, array( 'migration', 'migration-stage-b' ), true ) ) {
 		rbt_assert( ! get_option( 'recently_bought_settings_time_display' ), 'The test must upgrade without activation.' );
 		rbt_assert( 'none' === Someone_Recently_Bought_Init::get_setting( 'time_display' ), 'Missing time option must default to none.' );
 	} else {
-		rbt_assert( 'approximate' === get_option( 'recently_bought_settings_time_display' ), 'Stage B time setting must be preserved.' );
+		rbt_assert( 'approximate' === get_option( 'recently_bought_settings_time_display' ), 'The 1.0.0 time setting must be preserved.' );
+	}
+	foreach ( $text_keys as $key ) {
+		rbt_assert( false === get_option( 'recently_bought_settings_' . $key ) && '' === Someone_Recently_Bought_Init::get_setting( $key ), 'Missing text must fall back without writing an option during upgrade: ' . $key );
 	}
 	$notifications = Someone_Recently_Bought_Main::data_miner();
 	rbt_assert( array( 'Stage A Synthetic legacy product' ) === array_column( $notifications, 'name' ), 'Use the public catalog title for the original order.' );
 	rbt_assert( 'Someone already purchased this.' === $notifications[0]['message'], 'The migrated message must appear once.' );
 	rbt_assert( ( 'migration' === $mode ) === ( '' === $notifications[0]['time'] ), 'Unexpected time label after upgrade.' );
 	WP_CLI::success( 'Upgrade without reactivation preserved configuration and rendered the public catalog name.' );
+	return;
+}
+
+if ( 'notification-texts' === $mode ) {
+	Someone_Recently_Bought_Init::admin_init();
+	$domain = 'recently-bought-this-for-woocommerce';
+	$locale = 'en_US';
+	add_filter( 'pre_determine_locale', static function () use ( &$locale ) {
+		return $locale;
+	} );
+	$product = rbt_product( 'Stage A Synthetic translations' );
+	$orders  = array();
+	foreach ( array( 45, 12, 4, 1, 0 ) as $days ) {
+		$orders[] = rbt_order( $product, 'TEST_PRIVATE_LINE_7391', array( 'date' => current_datetime()->modify( "-$days days" )->getTimestamp() ) );
+	}
+	update_option( 'recently_bought_settings_pnumber', 5 );
+	update_option( 'recently_bought_settings_time_display', 'approximate' );
+	update_option( 'recently_bought_settings_text', 'recently bought' );
+	foreach ( $text_keys as $key ) {
+		update_option( 'recently_bought_settings_' . $key, '' );
+	}
+	$english = array( 'Ordered today', 'Ordered yesterday', 'Ordered within the last 7 days', 'Ordered within the last 30 days', 'Purchased in this store' );
+	$polish  = array( 'Zamówiono dzisiaj', 'Zamówiono wczoraj', 'Zamówiono w ostatnich 7 dniach', 'Zamówiono w ostatnich 30 dniach', 'Kupiono w tym sklepie' );
+	$czech   = array( 'Objednáno dnes', 'Objednáno včera', 'Objednáno v posledních 7 dnech', 'Objednáno v posledních 30 dnech', 'Zakoupeno v tomto obchodě' );
+	foreach ( array( 'en_US' => $english, 'pl_PL' => $polish, 'cs_CZ' => $english ) as $locale => $expected ) {
+		unload_textdomain( $domain, true );
+		$notices = Someone_Recently_Bought_Main::data_miner();
+		rbt_assert( array_slice( $expected, 0, 4 ) === array_slice( array_column( $notices, 'time' ), 0, 4 ), 'Incorrect fallback time labels for ' . $locale );
+		rbt_assert( $expected[4] === $notices[4]['message'] && '' === $notices[4]['time'], 'Incorrect neutral fallback for ' . $locale );
+	}
+	foreach ( array_combine( $text_keys, $czech ) as $key => $label ) {
+		update_option( 'recently_bought_settings_' . $key, $label );
+	}
+	update_option( 'recently_bought_settings_text', 'Někdo nedávno koupil' );
+	$notices = Someone_Recently_Bought_Main::data_miner();
+	rbt_assert( array( 'Někdo nedávno koupil', 'Někdo nedávno koupil', 'Někdo nedávno koupil', 'Někdo nedávno koupil', $czech[4] ) === array_column( $notices, 'message' ), 'Store copy and neutral copy must apply to the correct order ages.' );
+	rbt_assert( array_merge( array_slice( $czech, 0, 4 ), array( '' ) ) === array_column( $notices, 'time' ), 'All Czech overrides should be used verbatim.' );
+	update_option( 'recently_bought_settings_text_today', '<script></script><img onerror="">Dziś & včera' );
+	update_option( 'recently_bought_settings_text_yesterday', array( 'bad value' ) );
+	update_option( 'recently_bought_settings_text_last_30', '0' );
+	update_option( 'recently_bought_settings_text', '' );
+	$locale = 'pl_PL';
+	unload_textdomain( $domain, true );
+	$notices = Someone_Recently_Bought_Main::data_miner();
+	rbt_assert( array( 'Dziś & včera', $polish[1], $czech[2], '0', '' ) === array_column( $notices, 'time' ), 'Mixed text, gettext, sanitization and the literal zero must work independently.' );
+	rbt_assert( array_fill( 0, 5, $czech[4] ) === array_column( $notices, 'message' ), 'Empty original message must use the configurable neutral copy.' );
+	rbt_assert( 'Teksty powiadomień' === __( 'Notification texts', 'recently-bought-this-for-woocommerce' ), 'Missing Polish section heading.' );
+	rbt_assert( 'Pozostaw puste, aby użyć tłumaczenia WordPressa.' === __( 'Leave blank to use the WordPress translation.', 'recently-bought-this-for-woocommerce' ), 'Missing Polish settings hint.' );
+	update_option( 'recently_bought_settings_time_display', 'none' );
+	rbt_assert( array_fill( 0, 5, '' ) === array_column( Someone_Recently_Bought_Main::data_miner(), 'time' ), 'Disabled time mode must omit custom labels.' );
+	foreach ( $text_keys as $key ) {
+		delete_option( 'recently_bought_settings_' . $key );
+	}
+	foreach ( $orders as $order ) {
+		$order->delete( true );
+	}
+	$product->delete( true );
+	WP_CLI::success( 'English, Polish and Czech fallback, all Czech overrides, mixed and unsafe input, neutral copy and disabled time mode.' );
 	return;
 }
 
