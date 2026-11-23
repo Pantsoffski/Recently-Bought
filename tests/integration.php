@@ -220,6 +220,7 @@ if ( 'frontend' === $mode ) {
 	rbt_clear_fixtures( 'recently_bought_test_frontend' );
 	$product = rbt_product( 'Stage A Synthetic storefront product' );
 	$image   = rbt_fixture_image();
+	update_post_meta( $image, '_wp_attachment_image_alt', 'Synthetic product swatch' );
 	$product->set_image_id( $image );
 	$product->save();
 	$orders = array( rbt_order( $product, 'Second synthetic item' ), rbt_order( $product, 'Retro "O’Neil" <strong>Fixture</strong> & café' ) );
@@ -228,6 +229,48 @@ if ( 'frontend' === $mode ) {
 	update_option( 'recently_bought_settings_text', 'Someone bought: “fixture”; const sample = 1.' );
 	update_option( 'recently_bought_settings_randomize', 0 );
 	WP_CLI::success( 'Synthetic storefront fixtures created.' );
+	return;
+}
+
+if ( 'cookie-scopes' === $mode ) {
+	$method = new ReflectionMethod( Someone_Recently_Bought_Main::class, 'cookie_settings' );
+	$home   = 'http://127.0.0.1:38989/';
+	$filter = static function () use ( &$home ) {
+		return $home;
+	};
+	add_filter( 'pre_option_home', $filter );
+	$root = $method->invoke( null );
+	$home = 'http://127.0.0.1:38989/store-a';
+	$one  = $method->invoke( null );
+	$home = 'https://127.0.0.1:38989/store-a';
+	rbt_assert( $one === $method->invoke( null ), 'Changing the scheme must preserve the site-specific cookie name.' );
+	$home = 'http://127.0.0.1:38989/store-b';
+	$two  = $method->invoke( null );
+	rbt_assert( '/' === $root['cookiePath'] && '/store-a' === $one['cookiePath'] && '/store-b' === $two['cookiePath'], 'Wrong storefront cookie paths.' );
+	rbt_assert( 3 === count( array_unique( array_column( array( $root, $one, $two ), 'cookieName' ) ) ), 'Separate storefronts must have separate cookies.' );
+	remove_filter( 'pre_option_home', $filter );
+	WP_CLI::success( 'Scoped cookie for root, subdirectories and HTTPS.' );
+	return;
+}
+
+if ( 'refresh' === $mode ) {
+	$product = rbt_product( 'Stage A Synthetic refresh product' );
+	$orders  = array( rbt_order( $product, 'Refund candidate' ), rbt_order( $product, 'Cancellation candidate' ), rbt_order( $product, 'Age candidate' ) );
+	update_option( 'recently_bought_settings_time_display', 'approximate' );
+	update_option( 'recently_bought_settings_pnumber', 5 );
+	rbt_assert( 3 === count( rbt_names() ), 'Expected three current notifications before changes.' );
+	rbt_refund( $orders[0], 20, 1 );
+	$orders[1]->update_status( 'cancelled' );
+	$orders[2]->set_date_created( current_datetime()->modify( '-8 days' )->getTimestamp() );
+	$orders[2]->save();
+	$remaining = Someone_Recently_Bought_Main::data_miner();
+	rbt_assert( array( 'Age candidate' ) === array_column( $remaining, 'name' ), 'A fresh render must drop refunded and cancelled purchases.' );
+	rbt_assert( 'Ordered within the last 30 days' === $remaining[0]['time'], 'A fresh render must recompute the age label.' );
+	foreach ( $orders as $order ) {
+		$order->delete( true );
+	}
+	$product->delete( true );
+	WP_CLI::success( 'Fresh render respects refund, cancellation and age changes.' );
 	return;
 }
 
@@ -253,17 +296,8 @@ $created_after_switch = end( $orders );
 rbt_assert( ( 'hpos-off' !== $mode ) === ( 'shop_order' === get_post_type( $created_after_switch->get_id() ) ), 'Unexpected CPT record for a newly created order.' );
 
 update_option( 'recently_bought_settings_randomize', 1 );
-$ordered  = array_map( static fn( $i ) => 'Snapshot ' . $i, range( 11, 2 ) );
-$expected = $ordered;
-$changed  = false;
-sort( $expected );
-for ( $attempt = 0; $attempt < 3; ++$attempt ) {
-	$randomized = rbt_names();
-	$changed    = $changed || $ordered !== $randomized;
-	sort( $randomized );
-	rbt_assert( $expected === $randomized, 'Shuffle must preserve the selected set.' );
-}
-rbt_assert( $changed, 'Shuffle must change the order.' );
+$ordered = array_map( static fn( $i ) => 'Snapshot ' . $i, range( 11, 2 ) );
+rbt_assert( $ordered === rbt_names(), 'The server must keep stable ID order, including when the browser shuffles.' );
 update_option( 'recently_bought_settings_randomize', 0 );
 foreach ( $orders as $order ) {
 	$order->delete( true );

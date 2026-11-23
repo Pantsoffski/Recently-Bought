@@ -9,6 +9,8 @@ return array(
 	'language' => 'pl_PL',
 	'messages' => array(
 		'Recently Bought'                                 => 'Ostatnie zakupy',
+		'Recent purchases'                                => 'Ostatnie zakupy',
+		'Close notification'                              => 'Zamknij powiadomienie',
 		'Settings'                                        => 'Ustawienia',
 		'Recently Bought This for WooCommerce requires WooCommerce to be installed and active.' => 'Recently Bought This for WooCommerce wymaga zainstalowanej i aktywnej wtyczki WooCommerce.',
 		'Purchased in this store'                         => 'Kupiono w tym sklepie',

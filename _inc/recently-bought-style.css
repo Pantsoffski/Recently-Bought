@@ -1,34 +1,188 @@
-.fixed-dialog {
-    position: fixed;
-    top: 50px;
-    left: 50px;
-    margin-bottom: 20px;
+.recently-bought-dialog {
+	--rbt-top: calc(var(--rbt-offset-top, 0px) + max(12px, env(safe-area-inset-top, 0px)));
+	--rbt-right: calc(var(--rbt-offset-right, 0px) + max(12px, env(safe-area-inset-right, 0px)));
+	--rbt-bottom: calc(var(--rbt-offset-bottom, 0px) + max(12px, env(safe-area-inset-bottom, 0px)));
+	--rbt-left: calc(var(--rbt-offset-left, 0px) + max(12px, env(safe-area-inset-left, 0px)));
+	--rbt-background: #fff;
+	--rbt-text: #1d2327;
+	--rbt-accent: #a53605;
+	--rbt-border: #777c80;
+	--rbt-focus: #005fcc;
+	--rbt-close-hover: #edf0f2;
+
+	position: fixed;
+	z-index: 9999;
+	box-sizing: border-box;
+	max-width: calc(100% - var(--rbt-left) - var(--rbt-right));
+	max-height: calc(100% - var(--rbt-top) - var(--rbt-bottom));
+	overflow: hidden;
+	color-scheme: light dark;
+	background: var(--rbt-background);
+	color: var(--rbt-text);
+	border: 1px solid #777c80;
+	border-color: var(--rbt-border);
+	border-radius: 4px;
+	box-shadow: 0 3px 12px rgb(0 0 0 / 20%);
+	font: 0.8125rem/1.4 system-ui, sans-serif;
 }
 
-/*.ui-dialog-content {
-    padding-top: 5px;
-    padding-bottom: 5px;
-}*/
-
-.fixed-dialog .ui-dialog-titlebar-close {
-    visibility: visible;
-    position: absolute;
+@supports (color: light-dark(black, white)) {
+	.recently-bought-dialog {
+		--rbt-background: light-dark(#fff, #20262b);
+		--rbt-text: light-dark(#1d2327, #f1f3f5);
+		--rbt-accent: light-dark(#a53605, #ffad85);
+		--rbt-border: light-dark(#777c80, #929aa1);
+		--rbt-focus: light-dark(#005fcc, #97c8ff);
+		--rbt-close-hover: light-dark(#edf0f2, #37434d);
+	}
 }
 
-.fixed-dialog .ui-dialog-titlebar {
-    visibility: hidden;
-    width: 0;
-    height: 0;
-    margin: 0;
-    padding: 0;
+.recently-bought-dialog[data-corner="0"],
+.recently-bought-dialog[data-corner="3"] {
+	top: var(--rbt-top);
 }
 
-#itemsToShow a {
-    color: #000000;
-    outline : none;
-    font-size: 80%;
+.recently-bought-dialog[data-corner="1"],
+.recently-bought-dialog[data-corner="2"] {
+	bottom: var(--rbt-bottom);
 }
 
-#productTitle {
-    color: orangered;
+.recently-bought-dialog[data-corner="0"],
+.recently-bought-dialog[data-corner="1"] {
+	right: var(--rbt-right);
+}
+
+.recently-bought-dialog[data-corner="2"],
+.recently-bought-dialog[data-corner="3"] {
+	left: var(--rbt-left);
+}
+
+.recently-bought-dialog.recently-bought-obscures-focus {
+	visibility: hidden;
+}
+
+.recently-bought-dialog .ui-dialog-titlebar {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 1;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+
+.recently-bought-dialog .ui-dialog-title {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.recently-bought-dialog .ui-dialog-titlebar-close {
+	position: static;
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	width: 28px;
+	height: 28px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background: transparent;
+	color: inherit;
+	font: 20px/1 system-ui, sans-serif;
+	text-indent: 0;
+	cursor: pointer;
+}
+
+.recently-bought-dialog .ui-dialog-titlebar-close:hover {
+	background: var(--rbt-close-hover);
+}
+
+.recently-bought-dialog .ui-dialog-content {
+	box-sizing: border-box;
+	max-height: calc(100vh - var(--rbt-top) - var(--rbt-bottom) - 2px) !important;
+	padding: 10px 38px 10px 10px;
+	overflow: auto;
+	overscroll-behavior: contain;
+	background: transparent;
+	color: inherit;
+}
+
+.recently-bought-dialog #itemsToShow {
+	margin: 0;
+}
+
+.recently-bought-dialog #itemsToShow a {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	color: inherit;
+	text-decoration: none;
+}
+
+.recently-bought-dialog #itemsToShow img {
+	flex: none;
+	float: none;
+	max-width: min(80px, 32%);
+	max-height: 80px;
+	margin: 0;
+	object-fit: contain;
+}
+
+.recently-bought-copy {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.recently-bought-dialog #productTitle {
+	color: var(--rbt-accent);
+}
+
+.recently-bought-dialog #itemsToShow a:hover #productTitle,
+.recently-bought-dialog #itemsToShow a:focus-visible #productTitle {
+	text-decoration: underline;
+}
+
+.recently-bought-dialog #itemsToShow a:focus-visible,
+.recently-bought-dialog .ui-dialog-titlebar-close:focus-visible {
+	outline: 2px solid var(--rbt-focus);
+	outline-offset: 2px;
+}
+
+@media (prefers-contrast: more) {
+	.recently-bought-dialog,
+	.recently-bought-dialog .ui-dialog-titlebar-close {
+		border-color: currentColor;
+	}
+
+	.recently-bought-dialog #productTitle {
+		text-decoration: underline;
+	}
+}
+
+@media (forced-colors: active) {
+	.recently-bought-dialog {
+		background: Canvas;
+		color: CanvasText;
+		border-color: CanvasText;
+	}
+
+	.recently-bought-dialog #productTitle {
+		color: LinkText;
+	}
+
+	.recently-bought-dialog .ui-dialog-titlebar-close {
+		border-color: ButtonText;
+	}
+
+	.recently-bought-dialog #itemsToShow a:focus-visible,
+	.recently-bought-dialog .ui-dialog-titlebar-close:focus-visible {
+		outline-color: Highlight;
+	}
 }

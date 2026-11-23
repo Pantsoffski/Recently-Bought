@@ -72,7 +72,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 		const template = document.getElementById( 'recently-bought-notifications' );
 		const image = link.querySelector( 'img' );
 		return {
-			position: jQuery( '#justBought' ).dialog( 'option', 'position' ).at,
+			position: jQuery( '#justBought' ).notice( 'option', 'position' ).at,
 			url: link.href,
 			name: name.textContent,
 			nameChildren: name.children.length,
@@ -81,6 +81,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 			imageUrl: image.currentSrc || image.src,
 			imageHeight: image.style.height,
 			imageClass: image.classList.contains( 'alignleft' ),
+			imageAlt: image.alt,
 			privateAttributes: template.content.querySelectorAll( '[data-order-id], [datetime], time, script' ).length,
 			settings: JSON.parse( template.dataset.settings ),
 		};
@@ -92,12 +93,15 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 	assert.match( info.text, /^Someone bought: “fixture”; const sample = 1\./ );
 	assert.equal( info.imageHeight, '80px' );
 	assert.equal( info.imageClass, true );
+	assert.equal( info.imageAlt, 'Synthetic product swatch' );
 	assert.equal( ( await visitors.request.get( info.imageUrl ) ).status(), 200 );
 	const productResponse = await visitors.request.get( info.url );
 	assert.equal( productResponse.status(), 200 );
 	assert.match( await productResponse.text(), /Stage A Synthetic storefront product/ );
 	assert.equal( info.privateAttributes, 0 );
-	assert.deepEqual( info.settings, { corner, delay } );
+	assert.deepEqual( Object.keys( info.settings ).sort(), [ 'closeText', 'cookieName', 'cookiePath', 'corner', 'delay', 'randomize' ] );
+	assert.equal( info.settings.corner, corner );
+	assert.equal( info.settings.delay, delay );
 	if ( approximate ) {
 		assert.match( info.time, /^Ordered (today|yesterday)$/ );
 	} else {
@@ -109,7 +113,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 	if ( corner === 0 ) {
 		await pending.locator( '.ui-dialog-titlebar-close' ).click();
 		await page.waitForTimeout( 10500 );
-		const cookie = ( await visitors.cookies() ).find( ( value ) => value.name === 'justBought' );
+		const cookie = ( await visitors.cookies() ).find( ( value ) => value.name === info.settings.cookieName );
 		assert( cookie && cookie.expires - Date.now() / 1000 > 550, 'Manual dismissal must keep the ten-minute cookie.' );
 		await page.reload();
 		await page.waitForTimeout( 1000 );
@@ -117,7 +121,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 	} else if ( corner === 3 ) {
 		await page.locator( '#productTitle', { hasText: 'Second synthetic item' } ).waitFor( { timeout: 6500 } );
 		await pending.waitFor( { state: 'detached', timeout: 6500 } );
-		const cookie = ( await visitors.cookies() ).find( ( value ) => value.name === 'justBought' );
+		const cookie = ( await visitors.cookies() ).find( ( value ) => value.name === info.settings.cookieName );
 		const remaining = cookie && cookie.expires - Date.now() / 1000;
 		assert( remaining > 0 && remaining <= 15, 'Automatic dismissal must have a short cookie.' );
 	}

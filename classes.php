@@ -158,6 +158,7 @@ class Someone_Recently_Bought_Init {
 /** Selects verified purchases and renders storefront notifications. */
 class Someone_Recently_Bought_Main {
 	private const MAX_ORDER_PAGES = 3;
+	private const ASSET_VERSION   = '0.4.0-b';
 
 	/**
 	 * Storefront payload prepared for the current response.
@@ -173,9 +174,8 @@ class Someone_Recently_Bought_Main {
 			return;
 		}
 
-		wp_enqueue_style( 'wp-jquery-ui-dialog' );
-		wp_enqueue_style( 'recently-bought-style', plugins_url( '_inc/recently-bought-style.css', __FILE__ ), array( 'wp-jquery-ui-dialog' ), '0.4.0' );
-		wp_enqueue_script( 'recently-bought-notifications', plugins_url( '_inc/recently-bought.js', __FILE__ ), array( 'jquery-ui-dialog', 'jquery-effects-fade' ), '0.4.0', true );
+		wp_enqueue_style( 'recently-bought-style', plugins_url( '_inc/recently-bought-style.css', __FILE__ ), array(), self::ASSET_VERSION );
+		wp_enqueue_script( 'recently-bought-notifications', plugins_url( '_inc/recently-bought.js', __FILE__ ), array( 'jquery-ui-dialog' ), self::ASSET_VERSION, true );
 	}
 
 	/** Print escaped notification markup in an inert template. */
@@ -185,9 +185,11 @@ class Someone_Recently_Bought_Main {
 		}
 		$settings      = wp_json_encode(
 			array(
-				'corner' => Someone_Recently_Bought_Init::get_setting( 'corner' ),
-				'delay'  => Someone_Recently_Bought_Init::get_setting( 'slide_in_delay' ),
-			)
+				'corner'    => Someone_Recently_Bought_Init::get_setting( 'corner' ),
+				'delay'     => Someone_Recently_Bought_Init::get_setting( 'slide_in_delay' ),
+				'randomize' => 1 === Someone_Recently_Bought_Init::get_setting( 'randomize' ),
+				'closeText' => __( 'Close notification', 'recently-bought-this-for-woocommerce' ),
+			) + self::cookie_settings()
 		);
 		$allowed_image = array(
 			'img' => array_fill_keys( array( 'alt', 'class', 'decoding', 'fetchpriority', 'height', 'loading', 'sizes', 'src', 'srcset', 'style', 'title', 'width' ), true ),
@@ -197,16 +199,35 @@ class Someone_Recently_Bought_Main {
 			<?php foreach ( self::$notifications as $notification ) : ?>
 				<a href="<?php echo esc_url( $notification['url'] ); ?>">
 					<?php echo wp_kses( $notification['image'], $allowed_image ); ?>
-					<?php echo esc_html( $notification['message'] ); ?><br>
-					<span id="productTitle"><?php echo esc_html( $notification['name'] ); ?></span>
-					<?php if ( '' !== $notification['time'] ) : ?>
-						<br><small><?php echo esc_html( $notification['time'] ); ?></small>
-					<?php endif; ?>
+					<span class="recently-bought-copy">
+						<span><?php echo esc_html( $notification['message'] ); ?></span>
+						<span id="productTitle"><?php echo esc_html( $notification['name'] ); ?></span>
+						<?php if ( '' !== $notification['time'] ) : ?>
+							<small><?php echo esc_html( $notification['time'] ); ?></small>
+						<?php endif; ?>
+					</span>
 				</a>
 			<?php endforeach; ?>
 		</template>
-		<div id="justBought" title=""><p id="itemsToShow"></p></div>
+		<div id="justBought" title="<?php esc_attr_e( 'Recent purchases', 'recently-bought-this-for-woocommerce' ); ?>"><p id="itemsToShow"></p></div>
 		<?php
+	}
+
+	/**
+	 * Scope dismissal to the storefront, including sites sharing a hostname.
+	 *
+	 * @return string[] Public cookie settings for this site.
+	 */
+	private static function cookie_settings() {
+		$home = wp_parse_url( home_url( '/' ) );
+		$path = untrailingslashit( $home['path'] ?? '/' );
+		$path = '' === $path ? '/' : $path;
+		$site = strtolower( $home['host'] ?? '' ) . ':' . ( $home['port'] ?? '' ) . $path;
+
+		return array(
+			'cookieName' => 'recentlyBoughtClosed_' . substr( hash( 'sha256', $site ), 0, 16 ),
+			'cookiePath' => $path,
+		);
 	}
 
 	/**
@@ -227,6 +248,7 @@ class Someone_Recently_Bought_Main {
 			$message = $neutral_message;
 		}
 		$notifications = array();
+		$products      = array();
 		for ( $page = 1; $page <= self::MAX_ORDER_PAGES; ++$page ) {
 			$orders = wc_get_orders(
 				array(
@@ -247,28 +269,21 @@ class Someone_Recently_Bought_Main {
 				if ( ! $item instanceof WC_Order_Item_Product || $item->get_quantity() <= 0 || ! self::has_remaining_purchase( $order, $item ) ) {
 					continue;
 				}
-				$product_id = $item->get_product_id();
-				$product    = $product_id ? wc_get_product( $product_id ) : false;
-				if ( ! $product || 'publish' !== $product->get_status() || ! is_post_type_viewable( get_post_type( $product_id ) ) || '' !== get_post_field( 'post_password', $product_id ) ) {
+				$name = $item->get_name();
+				if ( '' === trim( $name ) ) {
 					continue;
 				}
-				$url  = sanitize_url( $product->get_permalink(), array( 'http', 'https' ) );
-				$name = $item->get_name();
-				if ( '' === $url || '' === trim( $name ) ) {
+
+				$product_id = $item->get_product_id();
+				if ( ! array_key_exists( $product_id, $products ) ) {
+					$products[ $product_id ] = self::product_presentation( $product_id );
+				}
+				if ( ! $products[ $product_id ] ) {
 					continue;
 				}
 
 				$time            = self::purchase_time_label( $order->get_date_created(), $now );
-				$notifications[] = array(
-					'url'     => $url,
-					'image'   => $product->get_image(
-						'shop_thumbnail',
-						array(
-							'style' => 'height:80px;width:auto;',
-							'class' => 'alignleft',
-						),
-						false
-					),
+				$notifications[] = $products[ $product_id ] + array(
 					'name'    => $name,
 					'message' => '' === $time ? $neutral_message : $message,
 					'time'    => $include_time ? $time : '',
@@ -282,10 +297,35 @@ class Someone_Recently_Bought_Main {
 			}
 		}
 
-		if ( 1 === Someone_Recently_Bought_Init::get_setting( 'randomize' ) ) {
-			shuffle( $notifications );
-		}
 		return $notifications;
+	}
+
+	/**
+	 * Get the shared presentation for a publicly viewable product.
+	 *
+	 * @param int $product_id Product or variation parent ID.
+	 * @return string[]|null Public product data, if available.
+	 */
+	private static function product_presentation( $product_id ) {
+		$product = $product_id ? wc_get_product( $product_id ) : false;
+		if ( ! $product || 'publish' !== $product->get_status() || ! is_post_type_viewable( get_post_type( $product_id ) ) || '' !== get_post_field( 'post_password', $product_id ) ) {
+			return null;
+		}
+		$url = sanitize_url( $product->get_permalink(), array( 'http', 'https' ) );
+		if ( '' === $url ) {
+			return null;
+		}
+		return array(
+			'url'   => $url,
+			'image' => $product->get_image(
+				'shop_thumbnail',
+				array(
+					'style' => 'height:80px;width:auto;',
+					'class' => 'alignleft',
+				),
+				false
+			),
+		);
 	}
 
 	/**
