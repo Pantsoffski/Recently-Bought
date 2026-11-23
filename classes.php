@@ -1,201 +1,382 @@
 <?php
-if (!defined('ABSPATH')) {
-    exit; # Exit if accessed directly
+/**
+ * Settings and storefront notifications.
+ *
+ * @package Recently_Bought_This
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-class Someone_Recently_Bought_Init { # Initialization
+/** Registers the plugin settings and hooks. */
+class Someone_Recently_Bought_Init {
+	private const DEFAULTS = array(
+		'pnumber'        => 5,
+		'text'           => 'recently bought',
+		'randomize'      => 0,
+		'corner'         => 1,
+		'slide_in_delay' => 1,
+		'time_display'   => 'none',
+	);
 
-    private static $initiated = false;
+	private const RANGES = array(
+		'pnumber'        => array( 2, 10 ),
+		'randomize'      => array( 0, 1 ),
+		'corner'         => array( 0, 3 ),
+		'slide_in_delay' => array( 0, 30 ),
+	);
 
-    public static function init() {
-        if (!self::$initiated) {
-            self::init_hooks();
-        }
-    }
+	/** Register hooks once WooCommerce is available. */
+	public static function init() {
+		add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ), 5 );
+		add_action( 'wp_enqueue_scripts', array( 'Someone_Recently_Bought_Main', 'enqueue' ) );
+		add_action( 'wp_footer', array( 'Someone_Recently_Bought_Main', 'main_draw' ), 100 );
+		add_filter( 'plugin_action_links_' . RECENTLY_BOUGHT_PLUGIN_BASENAME, array( __CLASS__, 'plugin_action_links_rb' ) );
+	}
 
-    public static function init_hooks() {
-        self::$initiated = true;
-        add_action('admin_init', array(__CLASS__, 'admin_init'));
-        add_action('wp_loaded', array(__CLASS__, 'just_init'));
-        add_action('admin_menu', array(__CLASS__, 'admin_menu'), 5); # Priority 5
-        add_action('wp_footer', array('Someone_Recently_Bought_Main', 'main_draw'), 100);
-        add_filter('plugin_action_links_' . RECENTLY_BOUGHT_PLUGIN_BASENAME, array(__CLASS__, 'plugin_action_links_rb'));
-    }
+	/** Register the bundled translations. */
+	public static function load_translations() {
+		load_plugin_textdomain( 'recently-bought-this-for-woocommerce', false, dirname( RECENTLY_BOUGHT_PLUGIN_BASENAME ) . '/languages' );
+	}
 
-    static function activate_plugin() {
-        add_option('recently_bought_settings_pnumber', 5);
-        add_option('recently_bought_settings_text', 'recently bought');
-        add_option('recently_bought_settings_randomize', 0);
-        add_option('recently_bought_settings_corner', 1); //0 == RT, 1 == RB, 2 == LB, 3 == LT
-        add_option('recently_bought_settings_slide_in_delay', 1);
-    }
+	/** Initialize missing options on activation. */
+	public static function activate_plugin() {
+		foreach ( self::DEFAULTS as $key => $default ) {
+			add_option( 'recently_bought_settings_' . $key, $default );
+		}
+	}
 
-    public static function uninstall_plugin() {
-        delete_option('recently_bought_settings_pnumber');
-        delete_option('recently_bought_settings_text');
-        delete_option('recently_bought_settings_randomize');
-        delete_option('recently_bought_settings_corner');
-        delete_option('recently_bought_settings_slide_in_delay');
-    }
+	/** Remove the plugin options on uninstall. */
+	public static function uninstall_plugin() {
+		foreach ( self::DEFAULTS as $key => $default ) {
+			delete_option( 'recently_bought_settings_' . $key );
+		}
+	}
 
-    public static function admin_init() {
-        register_setting('recently_bought_settings_group', 'recently_bought_settings_text');
-        register_setting('recently_bought_settings_group', 'recently_bought_settings_pnumber');
-        register_setting('recently_bought_settings_group', 'recently_bought_settings_randomize');
-        register_setting('recently_bought_settings_group', 'recently_bought_settings_corner'); 
-        register_setting('recently_bought_settings_group', 'recently_bought_settings_slide_in_delay');
-    }
+	/** Register settings and their sanitizers with WordPress. */
+	public static function admin_init() {
+		foreach ( self::DEFAULTS as $key => $default ) {
+			register_setting(
+				'recently_bought_settings_group',
+				'recently_bought_settings_' . $key,
+				array(
+					'type'              => is_int( $default ) ? 'integer' : 'string',
+					'default'           => $default,
+					'sanitize_callback' => static function ( $value ) use ( $key ) {
+						return self::normalize_setting( $key, $value );
+					},
+				)
+			);
+		}
+	}
 
-    public static function admin_menu() {
-        $optionsTitle = __('Recently Bought', 'recently-bought');
-        add_menu_page($optionsTitle, $optionsTitle, 'administrator', 'recently-bought-settings', array(__CLASS__, 'options_page_rb'), 'dashicons-cart');
-    }
+	/**
+	 * Read a setting with a safe fallback for upgrades and old data.
+	 *
+	 * @param string $key Setting suffix.
+	 * @return int|string Normalized setting.
+	 */
+	public static function get_setting( $key ) {
+		return self::normalize_setting( $key, get_option( 'recently_bought_settings_' . $key, self::DEFAULTS[ $key ] ) );
+	}
 
-    public static function just_init() {
-        wp_enqueue_script('jquery-ui-dialog');
-        wp_enqueue_script('jquery-effects-core');
-        wp_enqueue_script('jquery-effects-fade');
-        wp_enqueue_style('wp-jquery-ui-dialog');
-        wp_enqueue_style('pp_recently_bought_for_woocommerce_main_style', plugins_url('_inc/recently-bought-style.css', __FILE__));
-    }
+	/**
+	 * Apply identical validation at save and read time.
+	 *
+	 * @param string $key   Setting suffix.
+	 * @param mixed  $value Setting value.
+	 * @return int|string Normalized setting.
+	 */
+	private static function normalize_setting( $key, $value ) {
+		$default = self::DEFAULTS[ $key ];
 
-    public static function options_page_rb() { //Add settings page
-        require_once( RECENTLY_BOUGHT_PLUGIN_DIR . 'views/options.php' );
-    }
+		if ( 'text' === $key ) {
+			return is_string( $value ) ? sanitize_text_field( $value ) : $default;
+		}
 
-    public static function plugin_action_links_rb($links) { //Add settings link to plugins page
-        $action_links = array(
-            'settings' => '<a href="' . admin_url('admin.php?page=recently-bought-settings') . '">' . esc_html__('Settings', 'woocommerce') . '</a>',
-        );
+		if ( 'time_display' === $key ) {
+			return 'approximate' === $value ? $value : $default;
+		}
 
-        return array_merge($action_links, $links);
-    }
+		if ( ! is_int( $value ) && ! is_string( $value ) ) {
+			return $default;
+		}
+		list( $min, $max ) = self::RANGES[ $key ];
+		$number            = filter_var(
+			$value,
+			FILTER_VALIDATE_INT,
+			array(
+				'options' => array(
+					'min_range' => $min,
+					'max_range' => $max,
+				),
+			)
+		);
+		return false === $number ? $default : $number;
+	}
 
+	/** Add the existing settings page to the admin menu. */
+	public static function admin_menu() {
+		$title = __( 'Recently Bought', 'recently-bought-this-for-woocommerce' );
+		add_menu_page( $title, $title, 'manage_options', 'recently-bought-settings', array( __CLASS__, 'options_page_rb' ), 'dashicons-cart' );
+	}
+
+	/** Render the settings page for authorized users. */
+	public static function options_page_rb() {
+		if ( current_user_can( 'manage_options' ) ) {
+			require_once RECENTLY_BOUGHT_PLUGIN_DIR . 'views/options.php';
+		}
+	}
+
+	/**
+	 * Add a link to settings on the Plugins screen.
+	 *
+	 * @param string[] $links Existing plugin action links.
+	 * @return string[] Plugin action links.
+	 */
+	public static function plugin_action_links_rb( $links ) {
+		if ( current_user_can( 'manage_options' ) ) {
+			$links = array(
+				'settings' => '<a href="' . esc_url( admin_url( 'admin.php?page=recently-bought-settings' ) ) . '">' . esc_html__( 'Settings', 'recently-bought-this-for-woocommerce' ) . '</a>',
+			) + $links;
+		}
+		return $links;
+	}
+
+	/** Show the dependency notice to users who can act on it. */
+	public static function missing_woocommerce_notice() {
+		if ( current_user_can( 'activate_plugins' ) || current_user_can( 'manage_network_plugins' ) ) {
+			?>
+			<div class="notice notice-warning"><p><?php esc_html_e( 'Recently Bought This for WooCommerce requires WooCommerce to be installed and active.', 'recently-bought-this-for-woocommerce' ); ?></p></div>
+			<?php
+		}
+	}
 }
 
+/** Selects verified purchases and renders storefront notifications. */
 class Someone_Recently_Bought_Main {
+	private const MAX_ORDER_PAGES = 3;
 
-    public static function main_draw() {
-        $toShow = self::data_miner();
-        ?>
+	/**
+	 * Storefront payload prepared for the current response.
+	 *
+	 * @var array[]
+	 */
+	private static $notifications = array();
 
-        <script type="text/javascript">
-            jQuery(document).ready((function () {
-                function getCookie(cname) {
-                    var name = cname + "=";
-                    var decodedCookie = decodeURIComponent(document.cookie);
-                    var ca = decodedCookie.split(';');
-                    for (var i = 0; i < ca.length; i++) {
-                        var c = ca[i];
-                        while (c.charAt(0) == ' ') {
-                            c = c.substring(1);
-                        }
-                        if (c.indexOf(name) == 0) {
-                            return c.substring(name.length, c.length);
-                        }
-                    }
-                    return "";
-                }
+	/** Load the dialog and its resources only when there are notifications. */
+	public static function enqueue() {
+		self::$notifications = self::data_miner();
+		if ( ! self::$notifications ) {
+			return;
+		}
 
-                var cCookie = getCookie("justBought");
+		wp_enqueue_style( 'wp-jquery-ui-dialog' );
+		wp_enqueue_style( 'recently-bought-style', plugins_url( '_inc/recently-bought-style.css', __FILE__ ), array( 'wp-jquery-ui-dialog' ), '0.4.0' );
+		wp_enqueue_script( 'recently-bought-notifications', plugins_url( '_inc/recently-bought.js', __FILE__ ), array( 'jquery-ui-dialog', 'jquery-effects-fade' ), '0.4.0', true );
+	}
 
-                var toShow = <?php echo $toShow; ?>;
+	/** Print escaped notification markup in an inert template. */
+	public static function main_draw() {
+		if ( ! self::$notifications ) {
+			return;
+		}
+		$settings      = wp_json_encode(
+			array(
+				'corner' => Someone_Recently_Bought_Init::get_setting( 'corner' ),
+				'delay'  => Someone_Recently_Bought_Init::get_setting( 'slide_in_delay' ),
+			)
+		);
+		$allowed_image = array(
+			'img' => array_fill_keys( array( 'alt', 'class', 'decoding', 'fetchpriority', 'height', 'loading', 'sizes', 'src', 'srcset', 'style', 'title', 'width' ), true ),
+		);
+		?>
+		<template id="recently-bought-notifications" data-settings="<?php echo esc_attr( $settings ); ?>">
+			<?php foreach ( self::$notifications as $notification ) : ?>
+				<a href="<?php echo esc_url( $notification['url'] ); ?>">
+					<?php echo wp_kses( $notification['image'], $allowed_image ); ?>
+					<?php echo esc_html( $notification['message'] ); ?><br>
+					<span id="productTitle"><?php echo esc_html( $notification['name'] ); ?></span>
+					<?php if ( '' !== $notification['time'] ) : ?>
+						<br><small><?php echo esc_html( $notification['time'] ); ?></small>
+					<?php endif; ?>
+				</a>
+			<?php endforeach; ?>
+		</template>
+		<div id="justBought" title=""><p id="itemsToShow"></p></div>
+		<?php
+	}
 
-                if (cCookie == "" && typeof toShow !== 'undefined' && toShow.length > 0) {
-                    jQuery('#justBought').dialog({
-        <?php
-        $corner = get_option('recently_bought_settings_corner');
-        if ($corner == 0) {
-            echo "position: {my: 'right top', at: 'right top', of: window},";
-        } elseif ($corner == 1) {
-            echo "position: {my: 'right bottom', at: 'right bottom', of: window},";
-        } elseif ($corner == 2) {
-            echo "position: {my: 'left bottom', at: 'left bottom', of: window},";
-        } elseif ($corner == 3) {
-            echo "position: {my: 'left top', at: 'left top', of: window},";
-        }
-        ?>
-                        dialogClass: 'fixed-dialog',
-                        autoOpen: false,
-                        draggable: false,
-                        resizable: false,
-                        show: {effect: 'fade', duration: 1000},
-                        hide: {effect: 'fade', duration: 1000},
-                        close: function (event, ui) {
-                            var date = new Date();
-                            date.setTime(date.getTime() + (600 * 1000));
-                            var expires = "; expires=" + date.toGMTString();
-                            document.cookie = "justBought = closed;" + expires + "; path=/";
-                        }
-                    });
+	/**
+	 * Collect public product information from a limited set of confirmed orders.
+	 *
+	 * @return array[] Storefront notifications in display order.
+	 */
+	public static function data_miner() {
+		$limit           = Someone_Recently_Bought_Init::get_setting( 'pnumber' );
+		$text            = Someone_Recently_Bought_Init::get_setting( 'text' );
+		$include_time    = 'approximate' === Someone_Recently_Bought_Init::get_setting( 'time_display' );
+		$now             = new DateTimeImmutable( 'now', new DateTimeZone( wc_timezone_string() ) );
+		$neutral_message = __( 'Purchased in this store', 'recently-bought-this-for-woocommerce' );
+		$message         = $text;
+		if ( 'recently bought' === $text ) {
+			$message = __( 'Someone recently bought', 'recently-bought-this-for-woocommerce' );
+		} elseif ( '' === $text ) {
+			$message = $neutral_message;
+		}
+		$notifications = array();
+		for ( $page = 1; $page <= self::MAX_ORDER_PAGES; ++$page ) {
+			$orders = wc_get_orders(
+				array(
+					'type'    => 'shop_order',
+					'status'  => array( 'wc-processing', 'wc-completed' ),
+					'orderby' => 'ID',
+					'order'   => 'DESC',
+					'limit'   => $limit,
+					'page'    => $page,
+				)
+			);
+			foreach ( $orders as $order ) {
+				if ( ! self::is_confirmed( $order, $now ) ) {
+					continue;
+				}
+				$items = $order->get_items( 'line_item' );
+				$item  = reset( $items );
+				if ( ! $item instanceof WC_Order_Item_Product || $item->get_quantity() <= 0 || ! self::has_remaining_purchase( $order, $item ) ) {
+					continue;
+				}
+				$product_id = $item->get_product_id();
+				$product    = $product_id ? wc_get_product( $product_id ) : false;
+				if ( ! $product || 'publish' !== $product->get_status() || ! is_post_type_viewable( get_post_type( $product_id ) ) || '' !== get_post_field( 'post_password', $product_id ) ) {
+					continue;
+				}
+				$url  = sanitize_url( $product->get_permalink(), array( 'http', 'https' ) );
+				$name = $item->get_name();
+				if ( '' === $url || '' === trim( $name ) ) {
+					continue;
+				}
 
-                    jQuery('#itemsToShow').html(toShow[0]);
+				$time            = self::purchase_time_label( $order->get_date_created(), $now );
+				$notifications[] = array(
+					'url'     => $url,
+					'image'   => $product->get_image(
+						'shop_thumbnail',
+						array(
+							'style' => 'height:80px;width:auto;',
+							'class' => 'alignleft',
+						),
+						false
+					),
+					'name'    => $name,
+					'message' => '' === $time ? $neutral_message : $message,
+					'time'    => $include_time ? $time : '',
+				);
+				if ( count( $notifications ) === $limit ) {
+					break 2;
+				}
+			}
+			if ( count( $orders ) < $limit ) {
+				break;
+			}
+		}
 
-                    var timesRun = 0;
-                    var numberOfOrders = <?php echo get_option('recently_bought_settings_pnumber') ?> - 1;
-                    var interval = setInterval(function () {
-                        timesRun += 1;
-                        if (timesRun > numberOfOrders) {
-                            jQuery('#justBought').dialog('destroy');
-                            jQuery('p').remove('#itemsToShow');
-                            var date = new Date();
-                            date.setTime(date.getTime() + (15 * 1000));
-                            var expires = "; expires=" + date.toGMTString();
-                            document.cookie = "justBought = closed;" + expires + "; path=/";
-                            clearInterval(interval);
-                        } else if (timesRun <= numberOfOrders) {
-                            jQuery('#itemsToShow').fadeOut(500, function () {
-                                jQuery(this).html(toShow[timesRun]).fadeIn(500);
-                            });
-                        }
-                    }, 5 * 1000);
-                    
-                    // dialog open dealy
-                    var delay = <?php echo get_option('recently_bought_settings_slide_in_delay') ?> * 1000;
-                    setTimeout(function() {
-                        jQuery('#justBought').dialog('open');
-                    }, delay); // milliseconds
-                }
-            }));
-        </script>
-        <div id="justBought" title="">
-            <p id="itemsToShow"></p>
-        </div>
+		if ( 1 === Someone_Recently_Bought_Init::get_setting( 'randomize' ) ) {
+			shuffle( $notifications );
+		}
+		return $notifications;
+	}
 
-        <?php
-    }
+	/**
+	 * Check order status and the evidence available for the payment method.
+	 *
+	 * @param WC_Order          $order Candidate order.
+	 * @param DateTimeImmutable $now   Current time in the site timezone.
+	 * @return bool Whether the purchase is confirmed.
+	 */
+	private static function is_confirmed( WC_Order $order, DateTimeImmutable $now ) {
+		if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
+			return false;
+		}
+		$total = (float) $order->get_total();
+		if ( $total < 0 ) {
+			return false;
+		}
+		if ( 0.0 === $total || in_array( $order->get_payment_method(), array( 'cod', 'bacs', 'cheque' ), true ) ) {
+			return true;
+		}
 
-    public static function data_miner() {
-        $args = array('post_type' => 'shop_order', 'category' => '', 'post_status' => 'wc-on-hold, wc-completed, wc-pending, wc-processing', 'orderby' => 'ID', 'order' => 'DESC', 'posts_per_page' => get_option('recently_bought_settings_pnumber'));
-        $ordersToShow = get_posts($args); //gets args and return posts that match
-        $counting = count($ordersToShow);
-        for ($i = 1; $i <= $counting; $i++) {
-            $c = $i - 1;
-            $orders[$c] = new WC_Order($ordersToShow[$c]->ID);
-            $items[$c] = $orders[$c]->get_items();
-            $items[$c] = array_values($items[$c]);
-            $htmlToShow[$c] = '<a href="' .
-                    get_permalink($items[$c][0]['product_id']) .
-                    '">' .
-                    get_the_post_thumbnail($items[$c][0]['product_id'], 'shop_thumbnail', array('style' => 'height:80px;width:auto;', 'class' => 'alignleft')) .
-                    @$orders[$c]->shipping_first_name .
-                    ' ' .
-                    get_option('recently_bought_settings_text') .
-                    ' </br><span id="productTitle">' .
-                    $items[$c][0]['name'] .
-                    '</span></a>';
-        }
+		// WooCommerce can set date_paid on a manual status change. Also require a transaction reference.
+		$paid = $order->get_date_paid();
+		return $paid && $paid->getTimestamp() <= $now->getTimestamp() && '' !== trim( $order->get_transaction_id() );
+	}
 
-        if (isset($htmlToShow)) {
-            if (get_option('recently_bought_settings_randomize') == 1) { //randomizer
-                shuffle($htmlToShow);
-            }
-            $toShow = json_encode($htmlToShow);
-        } else {
-            $toShow = '';
-        }
+	/**
+	 * Check that the selected product still represents a purchase after refunds.
+	 *
+	 * @param WC_Order              $order Candidate order.
+	 * @param WC_Order_Item_Product $item  First product on the order.
+	 * @return bool Whether the product is still eligible.
+	 */
+	private static function has_remaining_purchase( WC_Order $order, WC_Order_Item_Product $item ) {
+		$refunds = $order->get_refunds();
+		if ( ! $refunds ) {
+			return true;
+		}
 
-        return $toShow;
-    }
+		$decimals       = wc_get_price_decimals();
+		$total_refunded = 0.0;
+		foreach ( $refunds as $refund ) {
+			$amount          = (float) $refund->get_amount();
+			$allocated       = 0.0;
+			$total_refunded += $amount;
+			foreach ( $refund->get_items( array( 'line_item', 'fee', 'shipping' ) ) as $refund_item ) {
+				$allocated -= (float) $refund_item->get_total() + (float) $refund_item->get_total_tax();
+			}
+			// An unallocated refund could have covered the selected product.
+			if ( round( $amount - $allocated, $decimals ) > 0 ) {
+				return false;
+			}
+		}
 
+		$total = (float) $order->get_total();
+		if ( $total > 0 && round( $total - $total_refunded, $decimals ) <= 0 ) {
+			return false;
+		}
+		if ( abs( $order->get_qty_refunded_for_item( $item->get_id() ) ) >= $item->get_quantity() ) {
+			return false;
+		}
+
+		$item_total = (float) $item->get_total();
+		return $item_total <= 0 || round( $item_total - $order->get_total_refunded_for_item( $item->get_id() ), $decimals ) > 0;
+	}
+
+	/**
+	 * Turn the private order timestamp into a public calendar-day label.
+	 *
+	 * @param DateTimeInterface|null $created Order creation time.
+	 * @param DateTimeImmutable      $now     Current time in the site timezone.
+	 * @return string Translated label or an empty string for unusable dates.
+	 */
+	private static function purchase_time_label( $created, DateTimeImmutable $now ) {
+		if ( ! $created || $created->getTimestamp() > $now->getTimestamp() ) {
+			return '';
+		}
+		$order_day = $now->setTimestamp( $created->getTimestamp() )->setTime( 0, 0 );
+		$days      = $order_day->diff( $now->setTime( 0, 0 ) )->days;
+		if ( 0 === $days ) {
+			return __( 'Ordered today', 'recently-bought-this-for-woocommerce' );
+		}
+		if ( 1 === $days ) {
+			return __( 'Ordered yesterday', 'recently-bought-this-for-woocommerce' );
+		}
+		if ( $days <= 7 ) {
+			return __( 'Ordered within the last 7 days', 'recently-bought-this-for-woocommerce' );
+		}
+		if ( $days <= 30 ) {
+			return __( 'Ordered within the last 30 days', 'recently-bought-this-for-woocommerce' );
+		}
+		return '';
+	}
 }
