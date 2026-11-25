@@ -25,6 +25,8 @@ class Someone_Recently_Bought_Init {
 		'text_last_7'    => '',
 		'text_last_30'   => '',
 		'text_neutral'   => '',
+		'bottom_spacing' => 'automatic',
+		'bottom_offset'  => 0,
 	);
 
 	private const RANGES = array(
@@ -32,6 +34,7 @@ class Someone_Recently_Bought_Init {
 		'randomize'      => array( 0, 1 ),
 		'corner'         => array( 0, 3 ),
 		'slide_in_delay' => array( 0, 30 ),
+		'bottom_offset'  => array( 0, 300 ),
 	);
 
 	/** Register hooks once WooCommerce is available. */
@@ -138,6 +141,9 @@ class Someone_Recently_Bought_Init {
 		if ( 'time_display' === $key ) {
 			return 'approximate' === $value ? $value : $default;
 		}
+		if ( 'bottom_spacing' === $key ) {
+			return in_array( $value, array( 'standard', 'manual' ), true ) ? $value : $default;
+		}
 
 		if ( ! is_int( $value ) && ! is_string( $value ) ) {
 			return $default;
@@ -159,7 +165,13 @@ class Someone_Recently_Bought_Init {
 	/** Add the existing settings page to the admin menu. */
 	public static function admin_menu() {
 		$title = __( 'Recently Bought', 'recently-bought-this-for-woocommerce' );
-		add_menu_page( $title, $title, 'manage_options', 'recently-bought-settings', array( __CLASS__, 'options_page_rb' ), 'dashicons-cart' );
+		$page  = add_menu_page( $title, $title, 'manage_options', 'recently-bought-settings', array( __CLASS__, 'options_page_rb' ), 'dashicons-cart' );
+		add_action(
+			'admin_print_styles-' . $page,
+			static function () {
+				wp_add_inline_style( 'common', '#recently-bought-spacing:not(:has(#recently-bought-spacing-manual:checked)) .recently-bought-manual-offset { display: none; }' );
+			}
+		);
 	}
 
 	/** Render the settings page for authorized users. */
@@ -200,7 +212,7 @@ class Someone_Recently_Bought_Init {
 /** Selects verified purchases and renders storefront notifications. */
 class Someone_Recently_Bought_Main {
 	private const MAX_ORDER_PAGES = 3;
-	private const ASSET_VERSION   = '1.0.1';
+	private const ASSET_VERSION   = '1.0.2';
 
 	/**
 	 * Storefront payload prepared for the current response.
@@ -227,10 +239,12 @@ class Someone_Recently_Bought_Main {
 		}
 		$settings      = wp_json_encode(
 			array(
-				'corner'    => Someone_Recently_Bought_Init::get_setting( 'corner' ),
-				'delay'     => Someone_Recently_Bought_Init::get_setting( 'slide_in_delay' ),
-				'randomize' => 1 === Someone_Recently_Bought_Init::get_setting( 'randomize' ),
-				'closeText' => __( 'Close notification', 'recently-bought-this-for-woocommerce' ),
+				'corner'        => Someone_Recently_Bought_Init::get_setting( 'corner' ),
+				'delay'         => Someone_Recently_Bought_Init::get_setting( 'slide_in_delay' ),
+				'randomize'     => 1 === Someone_Recently_Bought_Init::get_setting( 'randomize' ),
+				'closeText'     => __( 'Close notification', 'recently-bought-this-for-woocommerce' ),
+				'bottomSpacing' => Someone_Recently_Bought_Init::get_setting( 'bottom_spacing' ),
+				'bottomOffset'  => Someone_Recently_Bought_Init::get_setting( 'bottom_offset' ),
 			) + self::cookie_settings()
 		);
 		$allowed_image = array(
@@ -243,7 +257,7 @@ class Someone_Recently_Bought_Main {
 					<?php echo wp_kses( $notification['image'], $allowed_image ); ?>
 					<span class="recently-bought-copy">
 						<span><?php echo esc_html( $notification['message'] ); ?></span>
-						<span id="productTitle"><?php echo esc_html( $notification['name'] ); ?></span>
+						<span id="productTitle" title="<?php echo esc_attr( $notification['name'] ); ?>"><?php echo esc_html( $notification['name'] ); ?></span>
 						<?php if ( '' !== $notification['time'] ) : ?>
 							<small><?php echo esc_html( $notification['time'] ); ?></small>
 						<?php endif; ?>

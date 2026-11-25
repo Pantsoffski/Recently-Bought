@@ -85,6 +85,32 @@ async function checkEditableTexts( admin, visitors ) {
 	console.log( 'PASS Settings API form, translated placeholders, custom Unicode text and escaped storefront DOM.' );
 }
 
+async function checkBottomSpacing( admin, visitors ) {
+	const spacing = admin.getByRole( 'group', { name: 'Bottom spacing' } );
+	const offset = spacing.locator( '#recently-bought-bottom-offset' );
+	const previous = Number( await offset.inputValue() );
+	for ( const [ mode, value ] of [ [ 'automatic', previous ], [ 'manual', 120 ], [ 'standard', 120 ], [ 'automatic', 120 ] ] ) {
+		await spacing.locator( 'input[type=radio][value=' + mode + ']' ).check();
+		assert.equal( await offset.isVisible(), mode === 'manual' );
+		if ( mode === 'manual' ) {
+			assert.equal( await spacing.getByRole( 'spinbutton', { name: 'Additional bottom spacing (px)' } ).count(), 1 );
+			await offset.fill( String( value ) );
+		}
+		await admin.locator( '#submit' ).click();
+		await admin.waitForURL( '**&settings-updated=true' );
+		assert.equal( await spacing.locator( 'input:checked' ).inputValue(), mode );
+		const response = await visitors.request.get( '/' );
+		assert.equal( response.status(), 200 );
+		const markup = await response.text();
+		const settings = markup.match( /<template id="recently-bought-notifications" data-settings="([^"]+)"/ );
+		assert( settings );
+		const data = JSON.parse( settings[ 1 ].replaceAll( '&quot;', '"' ) );
+		assert.equal( data.bottomSpacing, mode );
+		assert.equal( data.bottomOffset, value );
+	}
+	console.log( 'PASS all three bottom spacing modes, conditional numeric field, manual persistence and storefront payload.' );
+}
+
 async function checkCorner( visitors, corner, approximate, delay ) {
 	const page = await visitors.newPage();
 	const errors = [];
@@ -133,7 +159,7 @@ async function checkCorner( visitors, corner, approximate, delay ) {
 	assert.equal( productResponse.status(), 200 );
 	assert.match( await productResponse.text(), /Stage A Synthetic storefront product/ );
 	assert.equal( info.privateAttributes, 0 );
-	assert.deepEqual( Object.keys( info.settings ).sort(), [ 'closeText', 'cookieName', 'cookiePath', 'corner', 'delay', 'randomize' ] );
+	assert.deepEqual( Object.keys( info.settings ).sort(), [ 'bottomOffset', 'bottomSpacing', 'closeText', 'cookieName', 'cookiePath', 'corner', 'delay', 'randomize' ] );
 	assert.equal( info.settings.corner, corner );
 	assert.equal( info.settings.delay, delay );
 	if ( approximate ) {
@@ -187,6 +213,7 @@ async function run() {
 		const nonceCheck = await admin.request.post( '/wp-admin/options.php', { form: { option_page: 'recently_bought_settings_group', action: 'update', recently_bought_settings_text: 'Synthetic settings test' } } );
 		assert.equal( nonceCheck.status(), 403 );
 		const textVisitors = await openLocalContext( browser, { width: 1280, height: 900 } );
+		await checkBottomSpacing( admin, textVisitors );
 		await checkEditableTexts( admin, textVisitors );
 		await textVisitors.close();
 		for ( let corner = 0; corner < 4; ++corner ) {

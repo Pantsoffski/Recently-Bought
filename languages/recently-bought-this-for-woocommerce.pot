@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Recently Bought This for WooCommerce 1.0.1\n"
+"Project-Id-Version: Recently Bought This for WooCommerce 1.0.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/recently-bought-this-for-woocommerce/\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-23T16:36:19+00:00\n"
+"POT-Creation-Date: 2026-11-25T15:35:59+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: recently-bought-this-for-woocommerce\n"
@@ -39,114 +39,150 @@ msgstr ""
 msgid "https://profiles.wordpress.org/piotr-pesta/"
 msgstr ""
 
-#: classes.php:105
+#: classes.php:108
 msgid "Ordered today"
 msgstr ""
 
-#: classes.php:106
+#: classes.php:109
 msgid "Ordered yesterday"
 msgstr ""
 
-#: classes.php:107
+#: classes.php:110
 msgid "Ordered within the last 7 days"
 msgstr ""
 
-#: classes.php:108
+#: classes.php:111
 msgid "Ordered within the last 30 days"
 msgstr ""
 
-#: classes.php:109
+#: classes.php:112
 msgid "Purchased in this store"
 msgstr ""
 
-#: classes.php:161
+#: classes.php:167
 msgid "Recently Bought"
 msgstr ""
 
-#: classes.php:181
+#: classes.php:193
 msgid "Settings"
 msgstr ""
 
-#: classes.php:191
+#: classes.php:203
 msgid "Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer."
 msgstr ""
 
-#: classes.php:192
+#: classes.php:204
 msgid "Recently Bought This for WooCommerce requires WooCommerce to be installed and active."
 msgstr ""
 
-#: classes.php:233
+#: classes.php:245
 msgid "Close notification"
 msgstr ""
 
-#: classes.php:254
+#: classes.php:268
 msgid "Recent purchases"
 msgstr ""
 
-#: classes.php:288
+#: classes.php:302
 msgid "Someone recently bought"
 msgstr ""
 
-#: views/options.php:16
+#: views/options.php:17
 msgid "Recently Bought This for WooCommerce - Settings"
 msgstr ""
 
-#: views/options.php:24
+#: views/options.php:25
 msgid "Text to show:"
 msgstr ""
 
-#: views/options.php:27
+#: views/options.php:28
 msgid "Enter the complete message as plain text. The default “recently bought” displays as “Someone recently bought”. Leaving the field empty uses the neutral purchase message below."
 msgstr ""
 
-#: views/options.php:32
+#: views/options.php:33
 msgid "Notification texts"
 msgstr ""
 
-#: views/options.php:33
+#: views/options.php:34
 msgid "Leave blank to use the WordPress translation."
 msgstr ""
 
-#: views/options.php:47
+#: views/options.php:48
 msgid "Number of orders to show (2-10):"
 msgstr ""
 
-#: views/options.php:51
+#: views/options.php:52
 msgid "In which shop corner you wish to show it?"
 msgstr ""
 
-#: views/options.php:54
+#: views/options.php:55
 msgid "Right-Top"
 msgstr ""
 
-#: views/options.php:55
+#: views/options.php:56
 msgid "Right-Bottom"
 msgstr ""
 
-#: views/options.php:56
+#: views/options.php:57
 msgid "Left-Bottom"
 msgstr ""
 
-#: views/options.php:57
+#: views/options.php:58
 msgid "Left-Top"
 msgstr ""
 
-#: views/options.php:62
-msgid "Randomize orders:"
+#: views/options.php:63
+msgid "Bottom spacing"
 msgstr ""
 
 #: views/options.php:66
-msgid "Popup after some delay (0-30 seconds):"
+msgid "Applies to the bottom corners."
+msgstr ""
+
+#: views/options.php:67
+msgid "Automatic (recommended)"
+msgstr ""
+
+#: views/options.php:68
+msgid "Automatically avoid bottom navigation bars."
+msgstr ""
+
+#: views/options.php:69
+msgid "Standard"
 msgstr ""
 
 #: views/options.php:70
-msgid "Purchase time information"
+msgid "Use the normal corner position without additional spacing."
+msgstr ""
+
+#: views/options.php:71
+msgid "Manual"
+msgstr ""
+
+#: views/options.php:72
+msgid "Set an additional bottom offset for a theme or component that Automatic does not detect."
 msgstr ""
 
 #: views/options.php:73
+msgid "Additional bottom spacing (px)"
+msgstr ""
+
+#: views/options.php:79
+msgid "Randomize orders:"
+msgstr ""
+
+#: views/options.php:83
+msgid "Popup after some delay (0-30 seconds):"
+msgstr ""
+
+#: views/options.php:87
+msgid "Purchase time information"
+msgstr ""
+
+#: views/options.php:90
 msgid "Do not display purchase time"
 msgstr ""
 
-#: views/options.php:74
+#: views/options.php:91
 msgid "Display approximate purchase time"
 msgstr ""

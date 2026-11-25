@@ -1,10 +1,10 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "slug": "recently-bought-this-for-woocommerce",
   "package": {
-    "file": "recently-bought-this-for-woocommerce-1.0.1.zip",
-    "bytes": 15930,
-    "sha256": "465a56cf76902af43f9a9c6f63f33575a1e8b7e29c325999f35de7d55b63a89b",
+    "file": "recently-bought-this-for-woocommerce-1.0.2.zip",
+    "bytes": 19965,
+    "sha256": "653212070cf356ef44c6e1da1ed971731a1323dad565708c6d169a43779f8c1e",
     "files": [
       "recently-bought-this-for-woocommerce/_inc/recently-bought-style.css",
       "recently-bought-this-for-woocommerce/_inc/recently-bought.js",
@@ -25,14 +25,14 @@
       "trunk/readme.txt",
       "trunk/views/options.php"
     ],
-    "tags/1.0.1/": [
-      "tags/1.0.1/_inc/recently-bought-style.css",
-      "tags/1.0.1/_inc/recently-bought.js",
-      "tags/1.0.1/classes.php",
-      "tags/1.0.1/languages/recently-bought-this-for-woocommerce-pl_PL.l10n.php",
-      "tags/1.0.1/pp-recently-bought-for-woocommerce.php",
-      "tags/1.0.1/readme.txt",
-      "tags/1.0.1/views/options.php"
+    "tags/1.0.2/": [
+      "tags/1.0.2/_inc/recently-bought-style.css",
+      "tags/1.0.2/_inc/recently-bought.js",
+      "tags/1.0.2/classes.php",
+      "tags/1.0.2/languages/recently-bought-this-for-woocommerce-pl_PL.l10n.php",
+      "tags/1.0.2/pp-recently-bought-for-woocommerce.php",
+      "tags/1.0.2/readme.txt",
+      "tags/1.0.2/views/options.php"
     ],
     "assets/": [
       {
@@ -88,11 +88,11 @@
       {
         "file": "screenshot-2.png",
         "width": 1280,
-        "height": 1250,
+        "height": 1533,
         "mime_type": "image/png",
-        "bytes": 87674,
-        "sha256": "b8f159fc224b7411857c0a980cf132b9982fddff1e3f414ca5530a9625250f05",
-        "purpose": "WordPress admin settings with editable notification texts",
+        "bytes": 109374,
+        "sha256": "7f3cbbe54b8f4c8e2ada531a4716997b2223fed2091097d3d14a4dd25384d5bc",
+        "purpose": "WordPress admin settings with all three bottom spacing modes",
         "svn_path": "assets/screenshot-2.png"
       },
       {
@@ -110,9 +110,9 @@
         "width": 390,
         "height": 900,
         "mime_type": "image/png",
-        "bytes": 112146,
-        "sha256": "1c364d06706ea67cac50e02fee942ebfc58ad4c67870bd30c96d4e9ccfc7eef8",
-        "purpose": "Mobile storefront",
+        "bytes": 107725,
+        "sha256": "c4f9fa9ab44544357c2ab6e1ac600974b4ed60863a16cf82e5995e42f50daf12",
+        "purpose": "Compact mobile notification above the shop navigation",
         "svn_path": "assets/screenshot-4.png"
       }
     ]

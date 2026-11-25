@@ -1,6 +1,6 @@
 const assert = require( 'node:assert/strict' );
 const path = require( 'node:path' );
-const { chromium } = require( 'playwright' );
+const { chromium, firefox, webkit } = require( 'playwright' );
 
 const origin = process.env.RBT_TEST_ORIGIN || 'http://127.0.0.1:38989';
 assert.match( origin, /^http:\/\/127\.0\.0\.1:\d+$/ );
@@ -45,7 +45,7 @@ async function fixtureContext( browser, fixture, options = {} ) {
 		if ( route.request().resourceType() !== 'document' ) {
 			return route.abort();
 		}
-		const configuration = { corner: 0, delay: 0, randomize: false, ...options.settings };
+		const configuration = { corner: 0, delay: 0, randomize: false, bottomSpacing: 'automatic', bottomOffset: 0, ...options.settings };
 		configuration.cookiePath = url.pathname.startsWith( '/shop-b/' ) ? '/shop-b' : '/shop-a';
 		configuration.cookieName = configuration.cookiePath === '/shop-b' ? 'recentlyBoughtClosed_b' : 'recentlyBoughtClosed_a';
 		const inputs = '<input id="outside" aria-label="Test checkout" style="position:fixed;top:0;left:0;box-sizing:border-box;width:8px;padding:0" autofocus>';
@@ -54,12 +54,14 @@ async function fixtureContext( browser, fixture, options = {} ) {
 			+ 'template.dataset.settings = JSON.stringify(window.fixtureSettings);'
 			+ ( options.count ? 'const anchor = template.content.firstElementChild; template.content.replaceChildren();'
 				+ 'for (let i=1;i<=' + Number( options.count ) + ';i++) { const entry=anchor.cloneNode(true); entry.querySelector("#productTitle").textContent="Synthetic item "+i; template.content.append(entry); }' : '' )
-			+ ( options.long ? 'template.content.querySelector("#productTitle").textContent = "LongUnbrokenSyntheticProduct".repeat(30);' : '' );
+			+ ( options.long ? 'template.content.querySelector(".recently-bought-copy > span").textContent = "Someone recently bought";'
+				+ 'template.content.querySelector("#productTitle").textContent = "LongUnbrokenSyntheticProduct".repeat(30);' : '' )
+			+ ( options.time ? 'for (const item of template.content.querySelectorAll(".recently-bought-copy:not(:has(small))")) { const time = document.createElement("small"); time.textContent = "Ordered yesterday"; item.append(time); }' : '' );
 		const tags = Array.from( fixture.assets.keys(), ( key ) => key.endsWith( '.css' )
 			? '<link rel="stylesheet" href="' + key + '">'
 			: '<script src="' + key + '"></script>' ).join( '' );
-		return route.fulfill( { contentType: 'text/html', body: '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1"><body>' + inputs + fixture.template
-			+ '<script>' + prepare + '</script>' + tags + ( options.duplicate ? '<script src="/asset/recently-bought.js"></script>' : '' ) + '</body></html>' } );
+		return route.fulfill( { contentType: 'text/html', body: '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1"><body class="woocommerce">' + inputs + fixture.template
+			+ '<script>' + prepare + '</script>' + tags + '<style>' + ( options.css || '' ) + '</style>' + ( options.duplicate ? '<script src="/asset/recently-bought.js"></script>' : '' ) + '</body></html>' } );
 	} );
 	return context;
 }
@@ -137,7 +139,8 @@ async function checkInteraction( browser, fixture ) {
 	await compact.evaluate( () => {
 		const panel = document.querySelector( '.recently-bought-dialog' ).getBoundingClientRect();
 		Object.assign( document.activeElement.style, { left: '90px', top: ( panel.bottom + 20 ) + 'px' } );
-		document.querySelector( 'template' ).content.children[ 1 ].querySelector( '#productTitle' ).textContent = 'LongUnbrokenSyntheticProduct'.repeat( 30 );
+		document.querySelector( 'template' ).content.children[ 1 ].querySelector( '.recently-bought-copy > span' ).textContent =
+			'A longer store message about the latest purchase. '.repeat( 8 );
 	} );
 	await compact.clock.runFor( 5000 );
 	assert.equal( await compact.locator( selector ).isVisible(), false, 'A taller rotated item must yield to a previously focused field.' );
@@ -220,7 +223,7 @@ function contrast( foreground, background ) {
 }
 
 async function checkViewportAndKeyboard( browser, fixture ) {
-	const context = await fixtureContext( browser, fixture, { long: true, count: 2, viewport: { width: 320, height: 568 } } );
+	const context = await fixtureContext( browser, fixture, { long: true, count: 2, time: true, viewport: { width: 320, height: 568 } } );
 	const page = await start( context );
 	const dialog = page.getByRole( 'dialog', { name: 'Recent purchases' } );
 	await dialog.waitFor();
@@ -239,8 +242,9 @@ async function checkViewportAndKeyboard( browser, fixture ) {
 		const copy = panel.querySelector( '.recently-bought-copy' ).getBoundingClientRect();
 		const img = panel.querySelector( 'img' ).getBoundingClientRect();
 		const { offsetTop, offsetLeft, width, height } = visualViewport;
-		return rect.left >= offsetLeft + 11 && rect.top >= offsetTop + 11 &&
-			rect.right <= offsetLeft + width - 11 && rect.bottom <= offsetTop + height - 11 &&
+		const gap = Number.parseFloat( getComputedStyle( panel ).getPropertyValue( '--rbt-gap' ) ) - 1;
+		return rect.left >= offsetLeft + gap && rect.top >= offsetTop + gap &&
+			rect.right <= offsetLeft + width - gap && rect.bottom <= offsetTop + height - gap &&
 			button.left >= rect.left && button.right <= rect.right && button.bottom <= rect.bottom &&
 			img.right <= copy.left && document.documentElement.scrollWidth <= document.documentElement.clientWidth;
 	} );
@@ -323,10 +327,264 @@ async function checkCheckout( browser ) {
 	console.log( 'PASS WooCommerce checkout: focused field remains editable and the overlapping dialog yields.' );
 }
 
+async function assertPlacement( page, expected, edge = 'bottom' ) {
+	await page.waitForFunction( ( { expected, edge } ) => {
+		const toast = document.querySelector( '.recently-bought-dialog' );
+		const rect = toast?.getBoundingClientRect();
+		if ( ! rect?.height || getComputedStyle( toast ).visibility !== 'visible' ) {
+			return false;
+		}
+		const viewport = window.visualViewport;
+		const bottom = viewport.offsetTop + viewport.height;
+		const right = viewport.offsetLeft + viewport.width;
+		const distance = edge === 'bottom' ? bottom - rect.bottom : rect.top - viewport.offsetTop;
+		return Math.abs( distance - expected ) <= 1 && rect.left >= viewport.offsetLeft && rect.right <= right + 1 &&
+			rect.top >= viewport.offsetTop && rect.bottom <= bottom + 1 &&
+			document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+	}, { expected, edge }, { timeout: 2500 } );
+}
+
+async function renderObstacles( page, html ) {
+	await page.evaluate( ( html ) => {
+		let container = document.querySelector( '#obstacles' );
+		if ( ! container ) {
+			container = document.createElement( 'div' );
+			container.id = 'obstacles';
+			document.body.prepend( container );
+		}
+		container.innerHTML = html;
+	}, html );
+}
+
+const barControls = '<button type="button">Menu</button><button type="button">Search</button><button type="button">Cart</button>';
+const navBar = ( height, extra = '' ) => '<nav aria-label="Shop" style="position:fixed;inset:auto 0 0;height:' +
+	height + 'px;display:flex;justify-content:space-around;align-items:center;z-index:10;' + extra + '">' + barControls + '</nav>';
+
+async function assertNavigationAvailable( page ) {
+	for ( const button of await page.locator( '#obstacles nav button' ).all() ) {
+		assert.equal( await button.evaluate( ( element ) => {
+			const rect = element.getBoundingClientRect();
+			return element.contains( document.elementFromPoint( rect.left + rect.width / 2, rect.top + rect.height / 2 ) );
+		} ), true );
+	}
+}
+
+async function checkBottomNavigation( browser, fixture, browserName ) {
+	const context = await fixtureContext( browser, fixture, {
+		viewport: { width: 390, height: 844 }, settings: { corner: 1, bottomSpacing: 'automatic' }, long: true,
+		css: '.ui-dialog.ui-widget.recently-bought-dialog{--rbt-safe-bottom:var(--fixture-safe,env(safe-area-inset-bottom,0px))}#obstacles nav.responsive{display:flex}' +
+			'@media(min-width:601px){#obstacles nav.responsive{height:52px}}@media(max-width:600px){#obstacles nav.responsive{height:80px}}' +
+			'@media(min-width:901px){#obstacles nav.responsive{display:none}}'
+	} );
+	const page = await start( context );
+	const dialog = page.locator( selector );
+	await assertPlacement( page, 10 );
+	const compact = await dialog.boundingBox();
+	const close = await dialog.getByRole( 'button', { name: 'Close notification' } ).boundingBox();
+	assert( compact.width <= 280 && compact.height <= 120 && close.width >= 44 && close.height >= 44,
+		JSON.stringify( { compact, close } ) );
+	assert( await dialog.locator( '#productTitle' ).evaluate( ( title ) =>
+		title.getBoundingClientRect().height <= 2 * Number.parseFloat( getComputedStyle( title ).lineHeight ) + 1 ) );
+	assert.match( await dialog.getByRole( 'link' ).ariaSnapshot(), /LongUnbrokenSyntheticProduct.{500}/ );
+	await renderObstacles( page, '<section>' + navBar( 50 ) + '</section>' );
+	for ( const height of [ 50, 80, 120 ] ) {
+		await page.locator( '#obstacles nav' ).evaluate( ( nav, height ) => { nav.style.height = height + 'px'; }, height );
+		await assertPlacement( page, height + 10 );
+		await assertNavigationAvailable( page );
+	}
+	await page.locator( '#obstacles section' ).evaluate( ( element ) => { element.style.opacity = '0'; } );
+	await assertPlacement( page, 10 );
+	await renderObstacles( page, navBar( 80 ).replace( '<nav ', '<nav class="responsive" ' ).replace( 'height:80px;display:flex;', '' ) );
+	for ( const [ width, height, offset ] of [
+		[ 320, 550, 90 ], [ 360, 740, 90 ], [ 390, 844, 90 ], [ 412, 915, 90 ], [ 600, 960, 90 ],
+		[ 768, 1024, 62 ], [ 820, 1180, 62 ], [ 844, 390, 62 ], [ 1024, 768, 12 ], [ 1180, 820, 12 ], [ 1440, 900, 12 ]
+	] ) {
+		await page.setViewportSize( { width, height } );
+		await assertPlacement( page, offset );
+		if ( offset > 12 ) {
+			await assertNavigationAvailable( page );
+		}
+	}
+	await page.setViewportSize( { width: 390, height: 844 } );
+	await renderObstacles( page, '<section style="height:1800px"><div style="height:1000px"></div><nav style="position:sticky;bottom:0;height:50px">' + barControls + '</nav></section>' );
+	await assertPlacement( page, 60 );
+	await page.evaluate( () => window.scrollTo( 0, 500 ) );
+	await assertPlacement( page, 10 );
+	await page.evaluate( () => window.scrollTo( 0, 0 ) );
+	await assertPlacement( page, 60 );
+	await renderObstacles( page, '<button style="position:fixed;bottom:0;right:0">Cookies</button><button style="position:fixed;bottom:12px;left:3px">Chat</button><footer style="height:40px">Footer</footer>' +
+		'<nav style="position:fixed;bottom:0;right:0;width:40px;height:80px">One</nav>' );
+	await assertPlacement( page, 10 );
+	await renderObstacles( page, navBar( 50 ) + navBar( 55, 'bottom:32px' ) );
+	await assertPlacement( page, 97 );
+	await page.setViewportSize( { width: 820, height: 1180 } );
+	await renderObstacles( page, navBar( 80, 'width:280px' ) );
+	await assertPlacement( page, 10 );
+	await page.setViewportSize( { width: 390, height: 844 } );
+	await renderObstacles( page, '<div id="onetrust-banner-sdk" style="position:fixed;inset:auto 0 0;height:95px"><button>Accept</button></div>' );
+	await dialog.waitFor( { state: 'hidden' } );
+	await renderObstacles( page, '<dialog><input aria-label="Modal input"></dialog>' );
+	await page.locator( 'dialog' ).evaluate( ( element ) => element.showModal() );
+	await dialog.waitFor( { state: 'hidden' } );
+	await page.locator( 'dialog' ).evaluate( ( element ) => element.close() );
+	await assertPlacement( page, 10 );
+	if ( browserName === 'chromium' ) {
+		const devtools = await context.newCDPSession( page );
+		await devtools.send( 'Emulation.setSafeAreaInsetsOverride', { insets: { bottom: 34 } } );
+	} else {
+		await page.locator( 'html' ).evaluate( ( root ) => root.style.setProperty( '--fixture-safe', '34px' ) );
+	}
+	await assertPlacement( page, 34 );
+	await renderObstacles( page, navBar( 52, 'padding-bottom:34px;box-sizing:content-box' ) );
+	await assertPlacement( page, 96 );
+	await page.setViewportSize( { width: 390, height: 125 } );
+	await dialog.waitFor( { state: 'hidden' } );
+	await page.setViewportSize( { width: 390, height: 844 } );
+	await assertPlacement( page, 96 );
+	await renderObstacles( page, '' );
+	await assertPlacement( page, 34 );
+	assert.deepEqual( page.errors, [] );
+	await context.close();
+
+	for ( const corner of [ 0, 1, 2, 3 ] ) {
+		for ( const bottomSpacing of [ 'automatic', 'standard', 'manual' ] ) {
+			const context = await fixtureContext( browser, fixture, {
+				viewport: { width: 390, height: 844 }, settings: { corner, bottomSpacing, bottomOffset: 120 }
+			} );
+			const page = await start( context );
+			await renderObstacles( page, navBar( 80 ) );
+			const bottom = [ 1, 2 ].includes( corner );
+			const expected = bottom ? { automatic: 90, standard: 10, manual: 130 }[ bottomSpacing ] : 10;
+			await assertPlacement( page, expected, bottom ? 'bottom' : 'top' );
+			const rect = await page.locator( selector ).boundingBox();
+			assert.ok( Math.abs( ( [ 0, 1 ].includes( corner ) ? 390 - rect.x - rect.width : rect.x ) - 10 ) <= 1 );
+			assert.deepEqual( page.errors, [] );
+			await context.close();
+		}
+	}
+	console.log( 'PASS ' + browserName + ': dynamic bars, sticky and responsive navigation, exclusions, overlays, safe-area, orientation, all widths, all corners and modes.' );
+}
+
+async function checkPalettes( browser, fixture, browserName ) {
+	const context = await fixtureContext( browser, fixture, {
+		colorScheme: 'dark', reducedMotion: 'no-preference', viewport: { width: 390, height: 844 }, count: 2, time: true,
+		css: 'body{background:#fff}html.dark body{background:#182020;color:#ddd}' +
+			'.woocommerce .ui-widget-content,.ui-dialog .ui-widget-content{background:#181818;color:#111}' +
+			'.woocommerce a,.woocommerce small,.woocommerce a span,.woocommerce .ui-button{color:#171717;background:#333}'
+	} );
+	const page = await start( context );
+	const dialog = page.locator( selector );
+	await dialog.waitFor();
+	await page.waitForFunction( () => getComputedStyle( document.querySelector( '.recently-bought-dialog' ) ).opacity === '1' );
+	for ( const [ palette, background ] of [ [ 'light', 'rgb(255, 255, 255)' ], [ 'dark', 'rgb(32, 38, 43)' ] ] ) {
+		await page.locator( 'html' ).evaluate( ( root, palette ) => root.classList.toggle( 'dark', palette === 'dark' ), palette );
+		await page.waitForFunction( ( palette ) => document.querySelector( '.recently-bought-dialog' ).dataset.palette === palette, palette );
+		const colors = await dialog.evaluate( ( panel ) => ( {
+			background: getComputedStyle( panel ).backgroundColor,
+			foregrounds: [ '#justBought', '#itemsToShow a', '.recently-bought-copy > span', '#productTitle', 'small', 'button' ]
+				.map( ( selector ) => getComputedStyle( panel.querySelector( selector ) ).color )
+		} ) );
+		assert.equal( colors.background, background );
+		const ratios = colors.foregrounds.map( ( color ) => contrast( color, colors.background ) );
+		assert( ratios.every( ( ratio ) => ratio >= 4.5 ) );
+		console.log( 'PASS ' + browserName + ' ' + palette + ' computed colors ' + JSON.stringify( { ...colors, ratios } ) );
+	}
+	if ( browserName === 'chromium' ) {
+		await page.locator( 'html' ).evaluate( ( root ) => root.classList.remove( 'dark' ) );
+		await page.waitForFunction( () => document.querySelector( '.recently-bought-dialog' ).dataset.palette === 'light' );
+		const rect = await dialog.boundingBox();
+		const widget = { x: Math.floor( rect.x + 8 ), y: Math.floor( rect.y + rect.height - 7 ), width: 2, height: 2 };
+		const shop = { x: 20, y: 40, width: 2, height: 2 };
+		const widgetBefore = await page.screenshot( { clip: widget } );
+		const shopBefore = await page.screenshot( { clip: shop } );
+		const devtools = await context.newCDPSession( page );
+		await devtools.send( 'Emulation.setAutoDarkModeOverride', { enabled: true } );
+		assert.notDeepEqual( await page.screenshot( { clip: shop } ), shopBefore );
+		assert.deepEqual( await page.screenshot( { clip: widget } ), widgetBefore );
+		console.log( 'PASS Chromium forced auto dark mode leaves widget pixels in the storefront palette.' );
+	}
+	assert.deepEqual( page.errors, [] );
+	await context.close();
+}
+
+async function checkLayoutCost( browser, fixture ) {
+	const context = await fixtureContext( browser, fixture, { settings: { corner: 1 }, viewport: { width: 390, height: 844 } } );
+	const page = await start( context );
+	await renderObstacles( page, '<main>' + '<p>Catalog item</p>'.repeat( 3000 ) + '</main>' + navBar( 80 ) );
+	await assertPlacement( page, 90 );
+	const costs = await page.evaluate( async () => {
+		const originalFrame = window.requestAnimationFrame;
+		const originalRect = Element.prototype.getBoundingClientRect;
+		const originalQuery = Element.prototype.querySelectorAll;
+		const timings = [];
+		let rects = 0;
+		let queries = 0;
+		window.requestAnimationFrame = ( callback ) => originalFrame( ( time ) => {
+			const start = performance.now();
+			callback( time );
+			timings.push( performance.now() - start );
+		} );
+		Element.prototype.getBoundingClientRect = function () {
+			++rects;
+			return originalRect.call( this );
+		};
+		Element.prototype.querySelectorAll = function ( ...args ) {
+			++queries;
+			return originalQuery.apply( this, args );
+		};
+		try {
+			for ( let frame = 0; frame < 60; ++frame ) {
+				for ( let event = 0; event < 10; ++event ) {
+					document.dispatchEvent( new Event( 'scroll' ) );
+				}
+				await new Promise( ( resolve ) => originalFrame( resolve ) );
+			}
+		} finally {
+			window.requestAnimationFrame = originalFrame;
+			Element.prototype.getBoundingClientRect = originalRect;
+			Element.prototype.querySelectorAll = originalQuery;
+		}
+		timings.sort( ( a, b ) => a - b );
+		return { frames: timings.length, queries, rects, mean: timings.reduce( ( sum, time ) => sum + time, 0 ) / timings.length, p95: timings[ 56 ], max: timings.at( -1 ) };
+	} );
+	assert.equal( costs.frames, 60 );
+	assert.equal( costs.queries, 0 );
+	assert( costs.rects <= 180 );
+	console.log( 'PASS Chromium layout cost with 3,000 catalog nodes, 600 scroll events ' + JSON.stringify( costs ) );
+	await context.close();
+}
+
+async function checkStorefrontNavigation( browser ) {
+	const context = await browser.newContext( { viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' } );
+	await context.route( '**/*', ( route ) => new URL( route.request().url() ).origin === origin ? route.continue() : route.abort() );
+	const page = await context.newPage();
+	await page.goto( origin + '/?rbt_corner=1&rbt_theme=storefront' );
+	const nav = page.locator( '.storefront-handheld-footer-bar' );
+	await nav.waitFor();
+	await assertPlacement( page, ( await nav.boundingBox() ).height + 10 );
+	const search = nav.locator( '.search > a' );
+	const cart = nav.locator( '.cart > a' );
+	await cart.click( { trial: true } );
+	await search.click();
+	await nav.locator( '.search.active' ).waitFor();
+	await page.locator( selector ).waitFor( { state: 'hidden' } );
+	await nav.locator( 'input[type=search]' ).fill( 'synthetic' );
+	await context.close();
+	console.log( 'PASS live local Storefront bar, cart hit target and expanded search.' );
+}
+
 ( async () => {
-	const browser = await chromium.launch();
+	const browserName = process.env.RBT_BROWSER || 'chromium';
+	const browser = await { chromium, firefox, webkit }[ browserName ].launch();
 	try {
 		const fixture = await captureFixture( browser );
+		await checkBottomNavigation( browser, fixture, browserName );
+		await checkPalettes( browser, fixture, browserName );
+		if ( browserName !== 'chromium' || process.argv.includes( '--geometry-only' ) ) {
+			return;
+		}
+		await checkLayoutCost( browser, fixture );
+		await checkStorefrontNavigation( browser );
 		await checkTimerCycles( browser, fixture );
 		await checkInteraction( browser, fixture );
 		await checkCookiesAndCachedMarkup( browser, fixture );

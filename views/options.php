@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $recently_bought_corner       = Someone_Recently_Bought_Init::get_setting( 'corner' );
 $recently_bought_time_display = Someone_Recently_Bought_Init::get_setting( 'time_display' );
+$recently_bought_spacing      = Someone_Recently_Bought_Init::get_setting( 'bottom_spacing' );
 ?>
 <div class="wrap">
 	<h2><?php esc_html_e( 'Recently Bought This for WooCommerce - Settings', 'recently-bought-this-for-woocommerce' ); ?></h2>
@@ -55,6 +56,22 @@ $recently_bought_time_display = Someone_Recently_Bought_Init::get_setting( 'time
 					<label><input type="radio" name="recently_bought_settings_corner" value="1" <?php checked( 1, $recently_bought_corner ); ?>> <?php esc_html_e( 'Right-Bottom', 'recently-bought-this-for-woocommerce' ); ?></label><br>
 					<label><input type="radio" name="recently_bought_settings_corner" value="2" <?php checked( 2, $recently_bought_corner ); ?>> <?php esc_html_e( 'Left-Bottom', 'recently-bought-this-for-woocommerce' ); ?></label><br>
 					<label><input type="radio" name="recently_bought_settings_corner" value="3" <?php checked( 3, $recently_bought_corner ); ?>> <?php esc_html_e( 'Left-Top', 'recently-bought-this-for-woocommerce' ); ?></label>
+					</fieldset>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" id="recently-bought-spacing-label"><?php esc_html_e( 'Bottom spacing', 'recently-bought-this-for-woocommerce' ); ?></th>
+				<td>
+					<fieldset id="recently-bought-spacing" aria-labelledby="recently-bought-spacing-label">
+						<p class="description"><?php esc_html_e( 'Applies to the bottom corners.', 'recently-bought-this-for-woocommerce' ); ?></p>
+						<p><label><input type="radio" name="recently_bought_settings_bottom_spacing" value="automatic" aria-describedby="recently-bought-spacing-automatic-help" <?php checked( 'automatic', $recently_bought_spacing ); ?>> <?php esc_html_e( 'Automatic (recommended)', 'recently-bought-this-for-woocommerce' ); ?></label><br>
+							<span class="description" id="recently-bought-spacing-automatic-help"><?php esc_html_e( 'Automatically avoid bottom navigation bars.', 'recently-bought-this-for-woocommerce' ); ?></span></p>
+						<p><label><input type="radio" name="recently_bought_settings_bottom_spacing" value="standard" aria-describedby="recently-bought-spacing-standard-help" <?php checked( 'standard', $recently_bought_spacing ); ?>> <?php esc_html_e( 'Standard', 'recently-bought-this-for-woocommerce' ); ?></label><br>
+							<span class="description" id="recently-bought-spacing-standard-help"><?php esc_html_e( 'Use the normal corner position without additional spacing.', 'recently-bought-this-for-woocommerce' ); ?></span></p>
+						<p><label><input id="recently-bought-spacing-manual" type="radio" name="recently_bought_settings_bottom_spacing" value="manual" aria-describedby="recently-bought-spacing-manual-help" <?php checked( 'manual', $recently_bought_spacing ); ?>> <?php esc_html_e( 'Manual', 'recently-bought-this-for-woocommerce' ); ?></label><br>
+							<span class="description" id="recently-bought-spacing-manual-help"><?php esc_html_e( 'Set an additional bottom offset for a theme or component that Automatic does not detect.', 'recently-bought-this-for-woocommerce' ); ?></span></p>
+						<p class="recently-bought-manual-offset"><label for="recently-bought-bottom-offset"><?php esc_html_e( 'Additional bottom spacing (px)', 'recently-bought-this-for-woocommerce' ); ?></label>
+							<input id="recently-bought-bottom-offset" type="number" name="recently_bought_settings_bottom_offset" value="<?php echo esc_attr( Someone_Recently_Bought_Init::get_setting( 'bottom_offset' ) ); ?>" min="0" max="300" step="1" class="small-text"></p>
 					</fieldset>
 				</td>
 			</tr>

@@ -2,10 +2,10 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Recently Bought This for WooCommerce 1.0.1\n"
+"Project-Id-Version: Recently Bought This for WooCommerce 1.0.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/recently-bought-this-for-woocommerce/\n"
-"POT-Creation-Date: 2026-11-23T16:36:19+00:00\n"
-"PO-Revision-Date: 2026-11-23T16:37:00+00:00\n"
+"POT-Creation-Date: 2026-11-25T15:35:59+00:00\n"
+"PO-Revision-Date: 2026-11-25T15:35:59+00:00\n"
 "Language-Team: Polski\n"
 "Language: pl_PL\n"
 "MIME-Version: 1.0\n"
@@ -42,117 +42,153 @@ msgstr "Piotr Pesta"
 msgid "https://profiles.wordpress.org/piotr-pesta/"
 msgstr "https://profiles.wordpress.org/piotr-pesta/"
 
-#: classes.php:105
+#: classes.php:108
 msgid "Ordered today"
 msgstr "Zamówiono dzisiaj"
 
-#: classes.php:106
+#: classes.php:109
 msgid "Ordered yesterday"
 msgstr "Zamówiono wczoraj"
 
-#: classes.php:107
+#: classes.php:110
 msgid "Ordered within the last 7 days"
 msgstr "Zamówiono w ostatnich 7 dniach"
 
-#: classes.php:108
+#: classes.php:111
 msgid "Ordered within the last 30 days"
 msgstr "Zamówiono w ostatnich 30 dniach"
 
-#: classes.php:109
+#: classes.php:112
 msgid "Purchased in this store"
 msgstr "Kupiono w tym sklepie"
 
-#: classes.php:161
+#: classes.php:167
 msgid "Recently Bought"
 msgstr "Ostatnie zakupy"
 
-#: classes.php:181
+#: classes.php:193
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: classes.php:191
+#: classes.php:203
 msgid "Recently Bought This for WooCommerce requires WooCommerce 11.2 or newer."
 msgstr ""
 "Recently Bought This for WooCommerce wymaga WooCommerce 11.2 lub nowszego."
 
-#: classes.php:192
+#: classes.php:204
 msgid "Recently Bought This for WooCommerce requires WooCommerce to be installed and active."
 msgstr ""
 "Recently Bought This for WooCommerce wymaga zainstalowanej i aktywnej "
 "wtyczki WooCommerce."
 
-#: classes.php:233
+#: classes.php:245
 msgid "Close notification"
 msgstr "Zamknij powiadomienie"
 
-#: classes.php:254
+#: classes.php:268
 msgid "Recent purchases"
 msgstr "Ostatnie zakupy"
 
-#: classes.php:288
+#: classes.php:302
 msgid "Someone recently bought"
 msgstr "Ktoś niedawno kupił"
 
-#: views/options.php:16
+#: views/options.php:17
 msgid "Recently Bought This for WooCommerce - Settings"
 msgstr "Recently Bought This for WooCommerce – ustawienia"
 
-#: views/options.php:24
+#: views/options.php:25
 msgid "Text to show:"
 msgstr "Wyświetlany tekst:"
 
-#: views/options.php:27
+#: views/options.php:28
 msgid "Enter the complete message as plain text. The default “recently bought” displays as “Someone recently bought”. Leaving the field empty uses the neutral purchase message below."
 msgstr "Wpisz cały komunikat jako zwykły tekst. Domyślna wartość „recently bought” wyświetla się jako „Ktoś niedawno kupił”. Puste pole używa ustawionego poniżej neutralnego komunikatu o zakupie."
 
-#: views/options.php:32
+#: views/options.php:33
 msgid "Notification texts"
 msgstr "Teksty powiadomień"
 
-#: views/options.php:33
+#: views/options.php:34
 msgid "Leave blank to use the WordPress translation."
 msgstr "Pozostaw puste, aby użyć tłumaczenia WordPressa."
 
-#: views/options.php:47
+#: views/options.php:48
 msgid "Number of orders to show (2-10):"
 msgstr "Liczba wyświetlanych zamówień (2–10):"
 
-#: views/options.php:51
+#: views/options.php:52
 msgid "In which shop corner you wish to show it?"
 msgstr "W którym narożniku wyświetlać powiadomienia?"
 
-#: views/options.php:54
+#: views/options.php:55
 msgid "Right-Top"
 msgstr "Prawy górny"
 
-#: views/options.php:55
+#: views/options.php:56
 msgid "Right-Bottom"
 msgstr "Prawy dolny"
 
-#: views/options.php:56
+#: views/options.php:57
 msgid "Left-Bottom"
 msgstr "Lewy dolny"
 
-#: views/options.php:57
+#: views/options.php:58
 msgid "Left-Top"
 msgstr "Lewy górny"
 
-#: views/options.php:62
+#: views/options.php:63
+msgid "Bottom spacing"
+msgstr "Dolny odstęp"
+
+#: views/options.php:66
+msgid "Applies to the bottom corners."
+msgstr "Dotyczy dolnych narożników."
+
+#: views/options.php:67
+msgid "Automatic (recommended)"
+msgstr "Automatyczny (zalecany)"
+
+#: views/options.php:68
+msgid "Automatically avoid bottom navigation bars."
+msgstr "Automatycznie omijaj dolne paski nawigacji."
+
+#: views/options.php:69
+msgid "Standard"
+msgstr "Standardowy"
+
+#: views/options.php:70
+msgid "Use the normal corner position without additional spacing."
+msgstr "Użyj zwykłej pozycji w narożniku bez dodatkowego odstępu."
+
+#: views/options.php:71
+msgid "Manual"
+msgstr "Ręczny"
+
+#: views/options.php:72
+msgid "Set an additional bottom offset for a theme or component that Automatic does not detect."
+msgstr "Ustaw dodatkowy odstęp od dołu, jeśli tryb automatyczny nie wykrywa elementu motywu lub wtyczki."
+
+#: views/options.php:73
+msgid "Additional bottom spacing (px)"
+msgstr "Dodatkowy dolny odstęp (px)"
+
+#: views/options.php:79
 msgid "Randomize orders:"
 msgstr "Losowa kolejność zamówień:"
 
-#: views/options.php:66
+#: views/options.php:83
 msgid "Popup after some delay (0-30 seconds):"
 msgstr "Opóźnienie powiadomienia (0–30 sekund):"
 
-#: views/options.php:70
+#: views/options.php:87
 msgid "Purchase time information"
 msgstr "Informacja o czasie zakupu"
 
-#: views/options.php:73
+#: views/options.php:90
 msgid "Do not display purchase time"
 msgstr "Nie pokazuj czasu zakupu"
 
-#: views/options.php:74
+#: views/options.php:91
 msgid "Display approximate purchase time"
 msgstr "Pokazuj przybliżony czas zakupu"

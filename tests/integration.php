@@ -107,12 +107,12 @@ $mode      = $args[0] ?? '';
 $text_keys = array( 'text_today', 'text_yesterday', 'text_last_7', 'text_last_30', 'text_neutral' );
 if ( 'fresh' === $mode || 'uninstalled' === $mode ) {
 	$defaults = array( 'pnumber' => '5', 'text' => 'recently bought', 'randomize' => '0', 'corner' => '1', 'slide_in_delay' => '1', 'time_display' => 'none' );
-	$defaults += array_fill_keys( $text_keys, '' );
+	$defaults += array_fill_keys( $text_keys, '' ) + array( 'bottom_spacing' => 'automatic', 'bottom_offset' => '0' );
 	foreach ( $defaults as $key => $default ) {
 		$expected = 'fresh' === $mode ? $default : false;
 		rbt_assert( $expected === get_option( 'recently_bought_settings_' . $key ), 'Incorrect activation or uninstall value: ' . $key );
 	}
-	WP_CLI::success( "$mode: all eleven options have the expected lifecycle." );
+	WP_CLI::success( "$mode: all thirteen stored values have the expected lifecycle." );
 	return;
 }
 
@@ -124,25 +124,60 @@ if ( 'seed-legacy' === $mode ) {
 	return;
 }
 
-if ( in_array( $mode, array( 'migration', 'migration-1.0.0' ), true ) ) {
+$legacies       = array( 'migration' => 0, 'migration-1.0.0' => 1, 'migration-1.0.1' => 2 );
+$migration_mode = str_starts_with( $mode, 'seed-' ) ? substr( $mode, 5 ) : $mode;
+if ( isset( $legacies[ $migration_mode ] ) ) {
+	$version  = $legacies[ $migration_mode ];
 	$expected = array( 'pnumber' => '10', 'text' => 'Someone already purchased this.', 'randomize' => '1', 'corner' => '0', 'slide_in_delay' => '0' );
+	if ( $version > 0 ) {
+		$expected['time_display'] = 'approximate';
+	}
+	if ( 2 === $version ) {
+		foreach ( $text_keys as $key ) {
+			$expected[ $key ] = 'Custom migration label: ' . $key;
+		}
+	}
+	if ( str_starts_with( $mode, 'seed-' ) ) {
+		foreach ( $expected as $key => $value ) {
+			update_option( 'recently_bought_settings_' . $key, $value );
+		}
+		return;
+	}
 	foreach ( $expected as $key => $value ) {
 		rbt_assert( $value === get_option( 'recently_bought_settings_' . $key ), 'Lost original option: ' . $key );
 	}
-	if ( 'migration' === $mode ) {
+	if ( 0 === $version ) {
 		rbt_assert( ! get_option( 'recently_bought_settings_time_display' ), 'The test must upgrade without activation.' );
 		rbt_assert( 'none' === Someone_Recently_Bought_Init::get_setting( 'time_display' ), 'Missing time option must default to none.' );
-	} else {
-		rbt_assert( 'approximate' === get_option( 'recently_bought_settings_time_display' ), 'The 1.0.0 time setting must be preserved.' );
 	}
-	foreach ( $text_keys as $key ) {
-		rbt_assert( false === get_option( 'recently_bought_settings_' . $key ) && '' === Someone_Recently_Bought_Init::get_setting( $key ), 'Missing text must fall back without writing an option during upgrade: ' . $key );
+	if ( $version < 2 ) {
+		foreach ( $text_keys as $key ) {
+			rbt_assert( false === get_option( 'recently_bought_settings_' . $key ) && '' === Someone_Recently_Bought_Init::get_setting( $key ), 'Missing text must fall back without writing an option during upgrade: ' . $key );
+		}
 	}
+	rbt_assert( false === get_option( 'recently_bought_settings_bottom_spacing' ) && 'automatic' === Someone_Recently_Bought_Init::get_setting( 'bottom_spacing' ), 'Missing spacing mode must default to Automatic without a database write.' );
+	rbt_assert( false === get_option( 'recently_bought_settings_bottom_offset' ) && 0 === Someone_Recently_Bought_Init::get_setting( 'bottom_offset' ), 'Missing offset must default to zero without a database write.' );
 	$notifications = Someone_Recently_Bought_Main::data_miner();
 	rbt_assert( array( 'Stage A Synthetic legacy product' ) === array_column( $notifications, 'name' ), 'Use the public catalog title for the original order.' );
 	rbt_assert( 'Someone already purchased this.' === $notifications[0]['message'], 'The migrated message must appear once.' );
-	rbt_assert( ( 'migration' === $mode ) === ( '' === $notifications[0]['time'] ), 'Unexpected time label after upgrade.' );
+	rbt_assert( ( 0 === $version ) === ( '' === $notifications[0]['time'] ), 'Unexpected time label after upgrade.' );
 	WP_CLI::success( 'Upgrade without reactivation preserved configuration and rendered the public catalog name.' );
+	return;
+}
+
+if ( 'bottom-spacing' === $mode ) {
+	Someone_Recently_Bought_Init::admin_init();
+	foreach ( array( 'automatic', 'standard', 'manual', '<b>manual</b>', '', array( 'manual' ) ) as $value ) {
+		update_option( 'recently_bought_settings_bottom_spacing', $value );
+		$expected = in_array( $value, array( 'standard', 'manual' ), true ) ? $value : 'automatic';
+		rbt_assert( $expected === get_option( 'recently_bought_settings_bottom_spacing' ) && $expected === Someone_Recently_Bought_Init::get_setting( 'bottom_spacing' ), 'Unexpected stored or normalized spacing mode.' );
+	}
+	foreach ( array( 0, '120', '300', '301', '-1', '80.5', array( '80' ), '81px' ) as $value ) {
+		update_option( 'recently_bought_settings_bottom_offset', $value );
+		$expected = in_array( $value, array( '120', '300' ), true ) ? (int) $value : 0;
+		rbt_assert( (string) $expected === (string) get_option( 'recently_bought_settings_bottom_offset' ) && $expected === Someone_Recently_Bought_Init::get_setting( 'bottom_offset' ), 'Unexpected stored or normalized manual offset.' );
+	}
+	WP_CLI::success( 'Bottom spacing settings accept the three modes and offsets from 0 to 300; unsafe values use defaults.' );
 	return;
 }
 
@@ -190,6 +225,7 @@ if ( 'notification-texts' === $mode ) {
 	rbt_assert( array( 'Dziś & včera', $polish[1], $czech[2], '0', '' ) === array_column( $notices, 'time' ), 'Mixed text, gettext, sanitization and the literal zero must work independently.' );
 	rbt_assert( array_fill( 0, 5, $czech[4] ) === array_column( $notices, 'message' ), 'Empty original message must use the configurable neutral copy.' );
 	rbt_assert( 'Teksty powiadomień' === __( 'Notification texts', 'recently-bought-this-for-woocommerce' ), 'Missing Polish section heading.' );
+	rbt_assert( 'Dolny odstęp' === __( 'Bottom spacing', 'recently-bought-this-for-woocommerce' ), 'Missing Polish spacing label.' );
 	rbt_assert( 'Pozostaw puste, aby użyć tłumaczenia WordPressa.' === __( 'Leave blank to use the WordPress translation.', 'recently-bought-this-for-woocommerce' ), 'Missing Polish settings hint.' );
 	update_option( 'recently_bought_settings_time_display', 'none' );
 	rbt_assert( array_fill( 0, 5, '' ) === array_column( Someone_Recently_Bought_Main::data_miner(), 'time' ), 'Disabled time mode must omit custom labels.' );

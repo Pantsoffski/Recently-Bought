@@ -84,6 +84,13 @@ body{margin:0;background:#f7f4eb;color:#203731}
 .morrow-collection .woocommerce ul.products li.product a{color:inherit;text-decoration:none}
 .morrow-collection .woocommerce ul.products li.product a.button{padding:8px 13px;border:1px solid #8f9f8c;border-radius:5px;background:#e9ede1;color:#234d3e;font-size:13px}
 .morrow-collection .woocommerce ul.products li.product .price{color:inherit}
+.morrow-dock{display:none}
+@media(max-width:900px){
+ .morrow-shell{padding-bottom:52px}
+ .morrow-dock{position:fixed;z-index:9999;inset:auto 0 0;display:grid;grid-template-columns:repeat(3,1fr);height:52px;background:#f7f4eb;color:#203731;border-top:1px solid #bdc8ba;text-align:center}
+ .morrow-dock a{display:grid;place-items:center;color:inherit;text-decoration:none;font-size:14px;font-weight:650}
+ .morrow-dock a+a{border-left:1px solid #dcded2}
+}
 @media(max-width:640px){
  .morrow-header{height:58px}
  .morrow-brand{font-size:16px}
@@ -93,6 +100,10 @@ body{margin:0;background:#f7f4eb;color:#203731}
  .morrow-collection{margin-top:23px}
  .morrow-collection h2{font-size:30px}
 }
+@media(max-width:600px){
+ .morrow-shell{padding-bottom:80px}
+ .morrow-dock{height:80px}
+}
 @media(prefers-color-scheme:dark){
  body{background:#141f1b;color:#f1f2e9}
  .morrow-hero{background:#263b33}
@@ -100,6 +111,8 @@ body{margin:0;background:#f7f4eb;color:#203731}
  .morrow-copy p,.morrow-nav{color:#cfddce}
  .morrow-hero a{background:#bcdcbb;color:#203c2d}
  .morrow-collection .woocommerce ul.products li.product a.button{background:#263b33;color:#e3f0e5}
+ .morrow-dock{background:#1d2d27;color:#f1f2e9;border-color:#405248}
+ .morrow-dock a+a{border-color:#405248}
 }
 </style>
 <main class="morrow-shell">
@@ -116,6 +129,7 @@ body{margin:0;background:#f7f4eb;color:#203731}
 <!-- wp:html -->
   </section>
 </main>
+<nav class="morrow-dock" aria-label="Shop"><a href="#collection">Collection</a><a href="/?post_type=product">Search</a><a href="/cart/">Cart</a></nav>
 <!-- /wp:html -->
 PAGE;
 

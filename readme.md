@@ -7,6 +7,7 @@ Show linked product notifications for confirmed WooCommerce orders without revea
 Recently Bought This displays compact purchase notifications on your WooCommerce storefront. Each notification links to the public product in your catalog and can show its image and an approximate order time.
 
 * Choose one of four screen corners.
+* Use compact notifications on narrow screens and automatically position them above common bottom navigation bars.
 * Show 2 to 10 notifications, with an optional random order.
 * Customize the main purchase message, four approximate time labels and the neutral purchase message.
 * Set an opening delay of 0 to 30 seconds.
@@ -45,6 +46,10 @@ Use the text settings to edit the main message, each of the four time labels and
 
 The notification uses the current public catalog title, image and link. For variations it uses the parent product. This keeps private names entered during order-item personalization out of the notification.
 
+### What if my theme has a bottom navigation bar?
+
+Bottom spacing defaults to Automatic and follows the size and position of common bottom navigation bars. If your theme or a plugin uses a custom bar that Automatic misses, select Manual and set an additional offset of 0–300 CSS pixels. Standard uses the normal corner position. These settings apply to the bottom corners.
+
 ### Does it support HPOS?
 
 Yes. WooCommerce's order API is used for legacy storage and HPOS, including HPOS without synchronization to the posts table.
@@ -60,11 +65,17 @@ A cached page can retain older products and time labels. Clear or expire the aff
 ## Screenshots
 
 1. Purchase notification on a WooCommerce storefront.
-2. Notification settings in the WordPress admin.
+2. Notification settings and bottom spacing modes in the WordPress admin.
 3. A storefront notification showing an approximate order time.
-4. A purchase notification on a mobile storefront.
+4. A compact purchase notification above the bottom navigation on a mobile storefront.
 
 ## Changelog
+
+### 1.0.2
+
+- Use a compact mobile layout with a larger close target.
+- Automatically position notifications above common bottom navigation bars and offer a manual bottom spacing fallback. Existing settings are preserved.
+- Improve theme and color compatibility with a consistent palette based on the storefront background.
 
 ### 1.0.1
 

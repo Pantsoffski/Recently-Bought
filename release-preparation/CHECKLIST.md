@@ -1,14 +1,47 @@
 # Recently Bought This for WooCommerce
 
-## Kandydat 1.0.1
+## Kandydat 1.0.2
 
-[Manifest bieżącej wersji](manifest.json) obejmuje instalowalny ZIP i osiem grafik. W tym wydaniu aktualizacji w katalogu WordPress.org wymaga tylko `screenshot-2.png`. Plansze przedstawiają historyczny zestaw 1.0.0.
+Weryfikacja lokalna z 25 listopada 2026 r. na syntetycznych danych. Przed publikacją właściciel sprawdzi kandydata na fizycznym telefonie.
 
-Odtworzenie paczki 1.0.1 z bieżącego kodu
+### Audyt frontendu
+
+- Publiczny Ordin.pl używa Storefront 4.6.2. `.storefront-handheld-footer-bar` miała `position: fixed`, wysokość 68,8 CSS px przy szerokościach 320 i 390 px oraz `z-index: 9999`. Pasek wyszukiwania i koszyka znikał przy 820 i 844 px, także w ustawieniu 844 × 390. W 1.0.1 powiadomienie miało ten sam poziom stosu i dolny margines 12 px. [Ordin.pl](https://ordin.pl/) · [Kod paska Storefront](https://github.com/woocommerce/storefront/blob/trunk/assets/css/woocommerce/woocommerce.scss)
+- W publicznym jasnym motywie ciemna preferencja systemu uruchamiała grafitową paletę 1.0.1 przez `color-scheme: light dark` i `light-dark()`. W syntetycznym powiadomieniu wykorzystującym CSS strony kolory po animacji zachowywały kontrast. Podczas wygaszania samej treści 1.0.1 przy kryciu 50% kontrast nazwy na grafitowym tle wynosi około 3,17:1 według obliczenia z kolorów CSS. Stan widziany na fizycznym telefonie pozostaje do sprawdzenia.
+- W Morrow Kiln powiadomienie z przybliżonym czasem zmalało z 300 × 102 do 280 × 73,4 CSS px. Miniatura zmalała z 80 do 52 px, a obszar zamknięcia wzrósł z 28 × 28 do 44 × 44 px. Powiadomienie zachowało margines 10 px nad paskiem 81 px na telefonie i 53 px na tablecie. W 1.0.1 zachodziło na te paski o 69 i 41 px.
+- Po animacji tekst i ikona zamknięcia osiągnęły 15,89:1 w jasnej palecie i 13,74:1 w ciemnej. Nazwa produktu osiągnęła odpowiednio 6,71:1 i 8,42:1. Test Chromium z wymuszonym automatycznym przyciemnieniem sprawdził również piksele powiadomienia.
+- Pomiar w Chromium objął 3000 węzłów katalogu oraz 600 zdarzeń przewijania w 60 klatkach. Średnia obsługa klatki wyniosła 0,15 ms, 95. percentyl 0,20 ms i maksimum 0,30 ms. W tym przebiegu wykonano 180 odczytów geometrii i zero nowych wywołań `querySelectorAll()`.
+
+### Kontrole wydania
+
+| Kontrola | Wynik |
+| --- | --- |
+| Chromium, Firefox, WebKit | PASS. Paski 50/80/120 px i 52 px na tablecie, wykrywanie po zmianach DOM, sticky, zmiana orientacji, nakładki, safe-area, 320–1440 px i wszystkie narożniki oraz tryby. |
+| Pełna regresja Chromium | PASS. Storefront, koszyk i wyszukiwarka, checkout, zoom 200%/400%, fokus, klawiatura, cookies, przywracanie po `pagehide`/`pageshow`, reduced motion i wymuszony kontrast. |
+| WordPress/WooCommerce/PHP | PASS. WordPress 7.0.9/WooCommerce 11.2.2/PHP 8.2.35 i WordPress 7.1.5/WooCommerce 11.3.1/PHP 8.3.36 oraz 8.4.28. `WP_DEBUG` i `WP_DEBUG_LOG` aktywne w serwerach testowych, zero wpisów dotyczących wtyczki. |
+| Zakupy i tłumaczenia | PASS. CPT oraz HPOS z synchronizacją i bez niej, kwalifikacja płatności, zwroty, prywatność, en_US, pl_PL i czeskie własne teksty. Multisite sprawdzono na witrynie głównej i dwóch witrynach w podkatalogach. |
+| Settings API | PASS. Uprawnienia, nonce, trzy tryby, walidacja wartości ręcznej 0–300 px i przekazanie ustawienia do frontendu. |
+| ZIP | PASS. Świeża instalacja, aktualizacja z 0.4.0, 1.0.0 i 1.0.1 oraz odinstalowanie. Aktualizacje zachowują dotychczasowe opcje. Domyślne wartości nowych pól to Automatic i 0 px. |
+| Kontrola statyczna | PASS. PHP lint na trzech wersjach, `node --check`, WPCS z dotychczasowymi wyjątkami nazw plików i układu klas, PHPCompatibilityWP oraz Plugin Check 2.2.0 przy aktywnym i wyłączonym WooCommerce. Plugin Check zgłosił 0 błędów i 0 ostrzeżeń. |
+| Fizyczne urządzenie | NOT RUN. Kontrola właściciela przed publikacją. |
+
+### Paczka i grafiki
+
+[Manifest](manifest.json) zawiera sumy kontrolne ZIP-a z siedmioma plikami i ośmiu grafik katalogowych. Dwa niezależne przebiegi narzędzia budującego z Pythonem 3.13.12 i zlib 1.3.1 dały identyczny ZIP. Python z inną implementacją zlib może wytworzyć inny zapis kompresji przy tej samej zawartości.
 
 ```powershell
-python release-preparation/build-zip.py release-preparation/recently-bought-this-for-woocommerce-1.0.1.zip
+python release-preparation/build-zip.py release-preparation/recently-bought-this-for-woocommerce-1.0.2.zip
 ```
+
+- [Nowy panel ustawień](../wordpress-org-assets/screenshot-2.png)
+- [Widok mobilny nad paskiem nawigacji](../wordpress-org-assets/screenshot-4.png)
+- [Plansza porównawcza 1.0.1 i 1.0.2](before-after-1.0.2.png) do oceny przez właściciela
+
+Zrzuty desktopowe `screenshot-1.png` i `screenshot-3.png` porównano piksel po pikselu z 1.0.2. W katalogu WordPress.org aktualizacji dla tego wydania wymagają `screenshot-2.png` i `screenshot-4.png`. Przed publikacją wymagana jest oddzielna zgoda właściciela na WordPress.org i GlotPress.
+
+## Archiwum kontroli 1.0.1
+
+Kandydat 1.0.1 dodał pięć opcjonalnych pól tekstowych. W tym wydaniu w katalogu WordPress.org zaktualizowano `screenshot-2.png`.
 
 ## Archiwum kontroli 1.0.0
 
