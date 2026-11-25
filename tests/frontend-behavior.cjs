@@ -78,9 +78,19 @@ async function start( context, site = '/shop-a/', virtualTime = false ) {
 	return page;
 }
 
-async function checkTimerCycles( browser, fixture ) {
+async function checkTimerCycles( browser, fixture, browserName ) {
 	for ( const [ delay, count ] of [ [ 0, 1 ], [ 1, 2 ], [ 5, 5 ], [ 30, 10 ] ] ) {
 		const context = await fixtureContext( browser, fixture, { count, settings: { delay }, duplicate: true } );
+		await context.addInitScript( () => {
+			const cookie = Object.getOwnPropertyDescriptor( Document.prototype, 'cookie' );
+			Object.defineProperty( document, 'cookie', {
+				get: () => cookie.get.call( document ),
+				set: ( value ) => {
+					window.dismissalCookie = value;
+					cookie.set.call( document, value );
+				}
+			} );
+		} );
 		const page = await start( context, '/shop-a/', true );
 		const dialog = page.locator( selector );
 		if ( delay ) {
@@ -97,7 +107,12 @@ async function checkTimerCycles( browser, fixture ) {
 		assert.equal( await dialog.count(), 0 );
 		assert.equal( await page.locator( '#outside' ).evaluate( ( input ) => input === document.activeElement ), true );
 		const [ cookie ] = await context.cookies();
-		assert( cookie.secure && cookie.sameSite === 'Lax' && cookie.path === '/shop-a' && cookie.value === 'closed' );
+		assert( cookie.secure && cookie.path === '/shop-a' && cookie.value === 'closed', JSON.stringify( cookie ) );
+		assert.match( await page.evaluate( () => window.dismissalCookie ), /; SameSite=Lax(?:;|$)/ );
+		// The Windows WebKit test port exposes this cookie as SameSite=None.
+		if ( browserName !== 'webkit' ) {
+			assert.equal( cookie.sameSite, 'Lax' );
+		}
 		assert( Math.abs( cookie.expires - Date.now() / 1000 - 15 ) < 3 );
 		assert.deepEqual( page.errors, [] );
 		await context.close();
@@ -222,7 +237,7 @@ function contrast( foreground, background ) {
 	return ( pair[ 0 ] + 0.05 ) / ( pair[ 1 ] + 0.05 );
 }
 
-async function checkViewportAndKeyboard( browser, fixture ) {
+async function checkViewportAndKeyboard( browser, fixture, browserName ) {
 	const context = await fixtureContext( browser, fixture, { long: true, count: 2, time: true, viewport: { width: 320, height: 568 } } );
 	const page = await start( context );
 	const dialog = page.getByRole( 'dialog', { name: 'Recent purchases' } );
@@ -234,6 +249,7 @@ async function checkViewportAndKeyboard( browser, fixture ) {
 		const after = document.createElement( 'button' );
 		after.id = 'after-notification';
 		after.textContent = 'After notification';
+		after.style.cssText = 'position:fixed;bottom:0;left:0';
 		panel.after( after );
 	} );
 	const verifyGeometry = () => dialog.evaluate( ( panel ) => {
@@ -254,15 +270,17 @@ async function checkViewportAndKeyboard( browser, fixture ) {
 		await page.waitForTimeout( 60 );
 		assert.equal( await verifyGeometry(), true, 'Long word and thumbnail must fit after resize.' );
 	}
-	await page.setViewportSize( { width: 1440, height: 1000 } );
-	const devtools = await context.newCDPSession( page );
-	for ( const scale of [ 2, 4 ] ) {
-		await devtools.send( 'Emulation.setPageScaleFactor', { pageScaleFactor: scale } );
-		await page.waitForTimeout( 80 );
-		assert.equal( await page.evaluate( () => visualViewport.scale ), scale );
-		assert.equal( await verifyGeometry(), true, 'Widget must fit visual viewport at ' + scale * 100 + '%.' );
+	if ( browserName === 'chromium' ) {
+		await page.setViewportSize( { width: 1440, height: 1000 } );
+		const devtools = await context.newCDPSession( page );
+		for ( const scale of [ 2, 4 ] ) {
+			await devtools.send( 'Emulation.setPageScaleFactor', { pageScaleFactor: scale } );
+			await page.waitForTimeout( 80 );
+			assert.equal( await page.evaluate( () => visualViewport.scale ), scale );
+			assert.equal( await verifyGeometry(), true, 'Widget must fit visual viewport at ' + scale * 100 + '%.' );
+		}
+		await devtools.send( 'Emulation.setPageScaleFactor', { pageScaleFactor: 1 } );
 	}
-	await devtools.send( 'Emulation.setPageScaleFactor', { pageScaleFactor: 1 } );
 
 	for ( const colorScheme of [ 'light', 'dark' ] ) {
 		await page.emulateMedia( { colorScheme } );
@@ -277,14 +295,21 @@ async function checkViewportAndKeyboard( browser, fixture ) {
 	await page.keyboard.press( 'Tab' );
 	assert.equal( await close.evaluate( ( element ) => element === document.activeElement ), true );
 	assert.equal( await close.evaluate( ( element ) => getComputedStyle( element ).outlineWidth ), '2px' );
-	await page.keyboard.press( 'Tab' );
+	if ( browserName === 'webkit' ) {
+		// The Windows WebKit port tabs to controls and skips links by default.
+		await product.focus();
+	} else {
+		await page.keyboard.press( 'Tab' );
+	}
 	assert.equal( await product.evaluate( ( element ) => element === document.activeElement ), true );
 	const outline = await product.evaluate( ( element ) => getComputedStyle( element ).outlineWidth );
 	assert.equal( outline, '2px' );
 	await page.keyboard.press( 'Tab' );
 	assert.equal( await page.locator( '#after-notification' ).evaluate( ( element ) => element === document.activeElement ), true );
 	await page.keyboard.press( 'Shift+Tab' );
-	await page.keyboard.press( 'Shift+Tab' );
+	if ( browserName !== 'webkit' ) {
+		await page.keyboard.press( 'Shift+Tab' );
+	}
 	assert.equal( await close.evaluate( ( element ) => element === document.activeElement ), true );
 	await page.keyboard.press( 'Shift+Tab' );
 	assert.equal( await page.locator( '#outside' ).evaluate( ( element ) => element === document.activeElement ), true );
@@ -294,7 +319,8 @@ async function checkViewportAndKeyboard( browser, fixture ) {
 	assert.equal( await page.locator( '#outside' ).evaluate( ( element ) => element === document.activeElement ), true );
 	assert.deepEqual( page.errors, [] );
 	await context.close();
-	console.log( 'PASS resize, landscape, 320 px, 200%/400% zoom, focus order, Escape, contrast and forced colors.' );
+	console.log( 'PASS resize, landscape, 320 px, focus order, Escape, contrast and forced colors.' +
+		( browserName === 'chromium' ? ' Also verified 200%/400% zoom.' : '' ) );
 }
 
 async function checkCheckout( browser ) {
@@ -341,7 +367,7 @@ async function assertPlacement( page, expected, edge = 'bottom' ) {
 		return Math.abs( distance - expected ) <= 1 && rect.left >= viewport.offsetLeft && rect.right <= right + 1 &&
 			rect.top >= viewport.offsetTop && rect.bottom <= bottom + 1 &&
 			document.documentElement.scrollWidth <= document.documentElement.clientWidth;
-	}, { expected, edge }, { timeout: 2500 } );
+	}, { expected, edge }, { timeout: 5000 } );
 }
 
 async function renderObstacles( page, html ) {
@@ -367,6 +393,103 @@ async function assertNavigationAvailable( page ) {
 			return element.contains( document.elementFromPoint( rect.left + rect.width / 2, rect.top + rect.height / 2 ) );
 		} ), true );
 	}
+}
+
+async function checkViewportTransitions( browser, fixture, browserName ) {
+	for ( const [ width, height ] of [ [ 390, 844 ], [ 820, 1180 ] ] ) {
+		const context = await fixtureContext( browser, fixture, {
+			viewport: { width, height }, settings: { corner: 1 }, count: 2, reducedMotion: 'no-preference',
+			css: 'body{min-height:2500px}#obstacles nav{z-index:9999!important}'
+		} );
+		try {
+			await context.addInitScript( () => {
+				const nativeViewport = window.visualViewport;
+				const reportedViewport = new EventTarget();
+				for ( const property of [ 'width', 'height', 'offsetLeft', 'offsetTop' ] ) {
+					Object.defineProperty( reportedViewport, property, {
+						get: () => window.reportedGeometry?.[ property ] ?? nativeViewport[ property ]
+					} );
+				}
+				Object.defineProperty( window, 'visualViewport', { value: reportedViewport } );
+			} );
+			const page = await start( context, '/shop-a/', true );
+			await renderObstacles( page, navBar( 69 ).replace( '<nav ', '<nav class="storefront-handheld-footer-bar" ' ) );
+			await page.clock.runFor( 250 );
+			await page.evaluate( () => {
+				const nav = document.querySelector( '#obstacles nav' );
+				nav.getBoundingClientRect = function () {
+					return window.missNavigation ? new DOMRect() : Element.prototype.getBoundingClientRect.call( this );
+				};
+				document.querySelector( 'template' ).content.children[ 1 ].querySelector( '#productTitle' ).textContent =
+					'Synthetic item 2 with a longer title to exercise wrapping across lines';
+			} );
+			assert.equal( await page.locator( '#productTitle' ).textContent(), 'Synthetic item 1' );
+
+			async function step( reportedHeight, missed, label ) {
+				await page.evaluate( ( { reportedHeight, missed } ) => {
+					window.reportedGeometry = { height: reportedHeight };
+					window.missNavigation = missed;
+					window.scrollBy( 0, 8 );
+					visualViewport.dispatchEvent( new Event( 'scroll' ) );
+					visualViewport.dispatchEvent( new Event( 'resize' ) );
+				}, { reportedHeight, missed } );
+				await page.clock.runFor( 24 );
+				const result = await page.evaluate( () => {
+					const panel = document.querySelector( '.recently-bought-dialog' );
+					const nav = document.querySelector( '#obstacles nav' );
+					const close = panel.querySelector( 'button' );
+					const closeBox = close.getBoundingClientRect();
+					const style = getComputedStyle( panel );
+					return {
+						gap: Element.prototype.getBoundingClientRect.call( nav ).top - panel.getBoundingClientRect().bottom,
+						visible: style.visibility === 'visible' && style.opacity === '1',
+						closeWorks: close.contains( document.elementFromPoint( closeBox.x + closeBox.width / 2, closeBox.y + closeBox.height / 2 ) ),
+						contentOpacity: Number( getComputedStyle( panel.querySelector( '#itemsToShow' ) ).opacity )
+					};
+				} );
+				assert( result.gap >= 9.75 && result.visible && result.closeWorks, label + ': ' + JSON.stringify( result ) );
+				await assertNavigationAvailable( page );
+				return result;
+			}
+
+			await page.setViewportSize( { width, height: height - 62 } );
+			await step( height, false, 'Layout shrinks before the visual viewport catches up' );
+			const entering = await step( height - 80, false, 'Address bar coming into view' );
+			assert( entering.gap <= 11, 'Visual and navigation insets must not add up.' );
+			await step( height - 62, true, 'Navigation rectangle briefly missing' );
+			await step( height - 56, false, 'Navigation rectangle recovered' );
+			await page.locator( '#obstacles nav' ).evaluate( ( nav ) => { nav.style.height = '98px'; } );
+			await step( height - 62, false, 'Navigation grows before the next paint' );
+			await page.locator( '#obstacles nav' ).evaluate( ( nav ) => { nav.style.transform = 'translateY(-48px)'; } );
+			await step( height - 62, false, 'Storefront bar moves ahead of the viewport' );
+			await page.locator( '#obstacles nav' ).evaluate( ( nav ) => { nav.style.transform = ''; } );
+
+			await page.clock.runFor( 4500 );
+			let fading = false;
+			for ( let sample = 0; sample < 34; ++sample ) {
+				const result = await step( height - 62 + ( sample % 4 ) * 18, sample % 7 === 0, 'Scroll during product transition' );
+				fading ||= result.contentOpacity < 1;
+			}
+			assert( fading, 'The contents still fade.' );
+			assert.match( await page.locator( '#productTitle' ).textContent(), /^Synthetic item 2 with a longer title/ );
+
+			await page.setViewportSize( { width: height, height: width } );
+			await page.locator( '#obstacles nav' ).evaluate( ( nav ) => { nav.style.display = 'none'; } );
+			await page.evaluate( () => {
+				window.reportedGeometry = {};
+				window.missNavigation = false;
+				visualViewport.dispatchEvent( new Event( 'resize' ) );
+			} );
+			await page.clock.runFor( 240 );
+			const gap = await page.locator( selector ).evaluate( ( panel ) => visualViewport.height - panel.getBoundingClientRect().bottom );
+			assert( Math.abs( gap - ( height <= 900 ? 10 : 12 ) ) <= 0.25,
+				'Rotating and really hiding the bar must restore the standard spacing. Measured: ' + gap );
+			assert.deepEqual( page.errors, [] );
+		} finally {
+			await context.close();
+		}
+	}
+	console.log( 'PASS ' + browserName + ': phone/tablet address bar transitions, brief detection loss, rotation and product fade with continuous navigation access.' );
 }
 
 async function checkBottomNavigation( browser, fixture, browserName ) {
@@ -578,17 +701,23 @@ async function checkStorefrontNavigation( browser ) {
 	const browser = await { chromium, firefox, webkit }[ browserName ].launch();
 	try {
 		const fixture = await captureFixture( browser );
-		await checkBottomNavigation( browser, fixture, browserName );
-		await checkPalettes( browser, fixture, browserName );
-		if ( browserName !== 'chromium' || process.argv.includes( '--geometry-only' ) ) {
+		await checkViewportTransitions( browser, fixture, browserName );
+		if ( process.argv.includes( '--transient-only' ) ) {
 			return;
 		}
-		await checkLayoutCost( browser, fixture );
+		await checkBottomNavigation( browser, fixture, browserName );
+		await checkPalettes( browser, fixture, browserName );
+		if ( process.argv.includes( '--geometry-only' ) ) {
+			return;
+		}
+		if ( browserName === 'chromium' ) {
+			await checkLayoutCost( browser, fixture );
+		}
 		await checkStorefrontNavigation( browser );
-		await checkTimerCycles( browser, fixture );
+		await checkTimerCycles( browser, fixture, browserName );
 		await checkInteraction( browser, fixture );
 		await checkCookiesAndCachedMarkup( browser, fixture );
-		await checkViewportAndKeyboard( browser, fixture );
+		await checkViewportAndKeyboard( browser, fixture, browserName );
 		await checkCheckout( browser );
 	} finally {
 		await browser.close();

@@ -1,6 +1,32 @@
 # Recently Bought This for WooCommerce
 
-## Kandydat 1.0.2
+## Stabilizacja mobilnego pozycjonowania w 1.0.2
+
+Na fizycznym telefonie z Androidem właściciel zaakceptował wygląd i statyczne położenie pierwszego kandydata. Zgłosił chwilowe nachodzenie na pasek Storefront podczas przewijania i ruchu paska adresu.
+
+### Reprodukcja i poprawka
+
+- W lokalnym teście bazowy commit `fff1174` nachodził na nawigację o 59 px, gdy wysokość widocznego viewportu została odczytana z poprzedniej klatki. Warunek bliskości do zgłoszonej dolnej krawędzi odrzucał wtedy prostokąt paska i zerował automatyczny odstęp. [CSSOM View](https://drafts.csswg.org/cssom-view/#the-visualviewport-interface) · [Pasek Storefront](https://github.com/woocommerce/storefront/blob/trunk/assets/css/woocommerce/woocommerce.scss)
+- Odstęp jest mierzony względem krawędzi pozycjonowania elementu `fixed`. Wtyczka wybiera większy z odstępu wymaganego przez pasek i odstępu wymaganego przez widoczny viewport oraz safe-area. Większy odstęp stosuje od razu, a mniejszy zatwierdza po ponownym pomiarze po co najmniej 120 ms. Zmiana rozmiaru lub orientacji i zniknięcie paska przywracają położenie zgodne z aktualną geometrią.
+- Pomiar w trakcie rotacji potwierdził, że wygasa treść, a okienko i zamknięcie pozostają dostępne. Zachowano animację, czas ekspozycji, liczbę produktów i reduced motion.
+- W Chromium przy 3000 węzłach katalogu i 600 zdarzeniach przewijania średnia praca klatki wyniosła 0,11–0,15 ms, a 95. percentyl 0,20–0,30 ms w dwóch przebiegach. W 60 klatkach wykonano po 180 odczytów geometrii i zero nowych wyszukiwań przez `querySelectorAll()`.
+
+### Kontrole stabilizacji
+
+- W Chromium, Firefox i WebKit powiadomienie nie nachodziło na pasek w żadnej z 80 sprawdzonych klatek przejściowych na symulowanym telefonie i tablecie. Zmiana orientacji i trwałe zniknięcie paska przywróciły zwykły odstęp. Testy przeglądarkowe odtwarzały wartości viewportu programowo.
+- Regresje trzech silników objęły lokalny Storefront i checkout, rogi i tryby odstępu, klawiaturę, przejścia oraz ciasteczka. W WebKit na Windows test ustawia fokus linku przez API i odczytuje atrybut SameSite z faktycznego zapisu ciasteczka.
+- Przeszły CPT, HPOS z synchronizacją i bez niej, prywatność, kwalifikacja płatności i zwroty. Powtórzono instalację, migracje z 0.4.0, 1.0.0 i 1.0.1 oraz odinstalowanie.
+- Plugin Check 2.2.0 zgłosił 0 błędów i 0 ostrzeżeń w kontrolach z aktywnym i wyłączonym WooCommerce. Przeszły PHP lint 8.2/8.3/8.4, WPCS, PHPCompatibilityWP i kontrola składni JavaScriptu. Finalny ZIP odtworzono z identyczną sumą SHA-256.
+
+### Ponowna instalacja
+
+Zbuduj paczkę istniejącym narzędziem lub weź gotowy ZIP wskazany w [manifeście](manifest.json). W WordPressie prześlij plik przez **Wtyczki → Dodaj nową → Wyślij wtyczkę na serwer** i wybierz zastąpienie obecnej wersji. W teście podmiana 1.0.2 na 1.0.2 zachowała aktywację i ustawienia. WordPress generuje nowe adresy CSS i JavaScript z parametrem `ver=1.0.2-2`. Jeśli sklep przechowuje pełne strony w cache lub CDN, odśwież HTML i ewentualne pakiety wygenerowane przez optymalizator plików. [Wersjonowanie skryptów w WordPressie](https://developer.wordpress.org/reference/functions/wp_enqueue_script/)
+
+### Test właściciela
+
+Na fizycznym Androidzie przewiń kilka razy w górę i w dół, aż pasek adresu się schowa i pojawi. Sprawdź koszyk oraz wyszukiwarkę także podczas zmiany produktu i po obrocie telefonu. Ponowny test urządzenia poprzedza publikację.
+
+## Pierwszy kandydat 1.0.2
 
 Weryfikacja lokalna z 25 listopada 2026 r. na syntetycznych danych. Przed publikacją właściciel sprawdzi kandydata na fizycznym telefonie.
 

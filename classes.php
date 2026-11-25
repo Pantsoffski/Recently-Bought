@@ -212,7 +212,7 @@ class Someone_Recently_Bought_Init {
 /** Selects verified purchases and renders storefront notifications. */
 class Someone_Recently_Bought_Main {
 	private const MAX_ORDER_PAGES = 3;
-	private const ASSET_VERSION   = '1.0.2';
+	private const ASSET_VERSION   = '1.0.2-2';
 
 	/**
 	 * Storefront payload prepared for the current response.

@@ -4,6 +4,7 @@
 	const corners = [ 'right top', 'right bottom', 'left bottom', 'left top' ];
 	const bottomBars = '.storefront-handheld-footer-bar, .wd-toolbar, .botiga-mobile-dock, .mobile-bottom-nav, .bottom-navigation';
 	const blockingOverlays = '[aria-modal="true"], [role="alertdialog"], dialog[open], [popover], #onetrust-banner-sdk, #onetrust-pc-sdk, #CybotCookiebotDialog, .cmplz-cookiebanner, .storefront-handheld-footer-bar .site-search';
+	const bottomReleaseDelay = 120;
 
 	function overlaps( first, second ) {
 		return first.top < second.bottom && first.bottom > second.top && first.left < second.right && first.right > second.left;
@@ -140,7 +141,7 @@
 			invalidate() {
 				dirty = true;
 			},
-			measure( view, widget ) {
+			measure( view, widget, fixedBottom ) {
 				if ( dirty ) {
 					positionedTargets();
 				}
@@ -148,19 +149,23 @@
 				const overlays = [];
 				for ( const [ element, { overlay, known } ] of targets ) {
 					const rect = element.getBoundingClientRect();
-					if ( ! rect.width || ! rect.height || ! overlaps( view, rect ) ||
+					if ( ! rect.width || ! rect.height ||
 						element.closest( '[hidden], [aria-hidden="true"], [inert]' ) ||
 						( element.checkVisibility ? ! element.checkVisibility( { opacityProperty: true, visibilityProperty: true } ) :
 							getComputedStyle( element ).visibility !== 'visible' || Number( getComputedStyle( element ).opacity ) === 0 ) ) {
 						continue;
 					}
 					if ( overlay ) {
+						if ( ! overlaps( view, rect ) ) {
+							continue;
+						}
 						const modal = element.matches( '[aria-modal="true"], [role="alertdialog"], :modal, .storefront-handheld-footer-bar .search.active .site-search' );
 						overlays.push( { rect, modal } );
 					} else if ( rect.left < widget.right && rect.right > widget.left &&
+						rect.top < fixedBottom && rect.bottom > view.top &&
 						rect.height <= Math.max( 144, view.height / 2 ) &&
 						rect.width >= Math.min( view.width * ( known ? 0.30 : 0.5 ), known ? 160 : 260 ) ) {
-						bars.push( rect );
+						bars.push( { rect, known } );
 					}
 				}
 				return { bars, overlays };
@@ -172,19 +177,19 @@
 		};
 	}
 
-	function occupiedBottom( view, bars, toastHeight, gap, safeBottom ) {
-		let top = view.bottom;
-		const normalBottom = view.bottom - Math.max( gap, safeBottom );
-		bars.sort( ( first, second ) => second.bottom - first.bottom );
-		for ( const bar of bars ) {
+	function occupiedBottom( fixedBottom, visibleBottom, bars, toastHeight, gap, safeBottom ) {
+		let top = fixedBottom;
+		const normalBottom = visibleBottom - Math.max( gap, safeBottom );
+		bars.sort( ( first, second ) => second.rect.bottom - first.rect.bottom );
+		for ( const { rect: bar, known } of bars ) {
 			const toastBottom = Math.min( normalBottom, top - gap );
-			// Connect stacked bars by their actual edges, including docks inset from the edge.
-			if ( bar.bottom >= top - Math.max( 32, safeBottom + gap ) &&
+			// A recognized dock can move ahead of either viewport during browser chrome changes.
+			if ( ( known || bar.bottom >= Math.min( top, visibleBottom ) - Math.max( 32, safeBottom + gap ) ) &&
 				bar.bottom > toastBottom - toastHeight && bar.top < toastBottom + gap ) {
 				top = bar.top;
 			}
 		}
-		return view.bottom - Math.max( view.top, top );
+		return Math.ceil( fixedBottom - top );
 	}
 
 	// Keep Dialog's wrapper and lifecycle without its automatic focus and Tab loop.
@@ -254,6 +259,10 @@
 		let timer;
 		let frame;
 		let obstacles;
+		let bottomInset = 0;
+		let pendingBottomInset;
+		let releaseReady = false;
+		let releaseTimer;
 		let paletteDirty = true;
 		let index = 0;
 		let hovered = false;
@@ -299,6 +308,7 @@
 		function stop() {
 			disposed = true;
 			window.clearTimeout( timer );
+			window.clearTimeout( releaseTimer );
 			window.cancelAnimationFrame( frame );
 			paletteObserver.disconnect();
 			obstacles?.stop();
@@ -345,8 +355,26 @@
 			}, 5000 );
 		}
 
+		function stabilizeBottomInset( measured ) {
+			// Apply greater clearance immediately. Confirm a smaller inset on a later
+			// frame so a transient missing rectangle cannot drop the toast over the bar.
+			if ( measured >= bottomInset || ( measured === pendingBottomInset && releaseReady ) ) {
+				bottomInset = measured;
+				pendingBottomInset = undefined;
+				window.clearTimeout( releaseTimer );
+			} else if ( measured !== pendingBottomInset ) {
+				pendingBottomInset = measured;
+				releaseReady = false;
+				window.clearTimeout( releaseTimer );
+				releaseTimer = window.setTimeout( () => {
+					releaseReady = true;
+					scheduleLayout();
+				}, bottomReleaseDelay );
+			}
+			return bottomInset;
+		}
+
 		function layout() {
-			frame = undefined;
 			if ( paletteDirty ) {
 				panel.dataset.palette = storefrontPalette();
 				paletteDirty = false;
@@ -357,25 +385,32 @@
 			const width = viewport?.width || root.clientWidth;
 			const height = viewport?.height || root.clientHeight;
 			const view = { left, top, right: left + width, bottom: top + height, width, height };
+			const viewportBottomInset = viewport ? Math.max( 0, root.clientHeight - view.bottom ) : 0;
 			if ( viewport ) {
 				setPixels( '--rbt-offset-top', top );
 				setPixels( '--rbt-offset-left', left );
 				setPixels( '--rbt-offset-right', Math.max( 0, root.clientWidth - view.right ) );
-				setPixels( '--rbt-offset-bottom', Math.max( 0, root.clientHeight - view.bottom ) );
+				setPixels( '--rbt-offset-bottom', viewportBottomInset );
 			}
 
 			let widget = panel.getBoundingClientRect();
-			const { bars, overlays } = obstacles.measure( view, widget );
+			const style = avoidBars ? getComputedStyle( panel ) : null;
+			// The visible viewport and fixed boxes can report different edges while
+			// mobile browser chrome moves. Use the toast's fixed containing block.
+			const fixedBottom = avoidBars ? widget.bottom + Number.parseFloat( style.bottom ) : view.bottom;
+			const { bars, overlays } = obstacles.measure( view, widget, fixedBottom );
 			const content = $dialog[ 0 ];
 			let occupied = 0;
-			if ( bars.length ) {
-				const style = getComputedStyle( panel );
+			if ( avoidBars ) {
 				const gap = Number.parseFloat( style.getPropertyValue( '--rbt-gap' ) );
 				const safeBottom = Number.parseFloat( style.getPropertyValue( '--rbt-safe-bottom' ) ) || 0;
-				occupied = occupiedBottom( view, bars, content.scrollHeight + 2, gap, safeBottom );
-			}
-			if ( avoidBars && setPixels( '--rbt-occupied', occupied ) ) {
-				widget = panel.getBoundingClientRect();
+				const measured = bars.length ? occupiedBottom(
+					fixedBottom, fixedBottom - viewportBottomInset, bars, content.scrollHeight + 2, gap, safeBottom
+				) : 0;
+				occupied = stabilizeBottomInset( measured );
+				if ( setPixels( '--rbt-occupied', occupied ) ) {
+					widget = panel.getBoundingClientRect();
+				}
 			}
 			const noRoom = widget.width < 80 || widget.height < Math.min( 56, content.scrollHeight + 2 ) ||
 				( occupied > 0 && content.scrollHeight > content.clientHeight + 1 );
@@ -404,7 +439,10 @@
 
 		function scheduleLayout() {
 			if ( ! disposed && frame === undefined ) {
-				frame = window.requestAnimationFrame( layout );
+				frame = window.requestAnimationFrame( () => {
+					frame = undefined;
+					layout();
+				} );
 			}
 		}
 

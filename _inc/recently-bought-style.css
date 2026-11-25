@@ -3,7 +3,7 @@
 	--rbt-top: calc(var(--rbt-offset-top, 0px) + max(var(--rbt-gap), env(safe-area-inset-top, 0px)));
 	--rbt-right: calc(var(--rbt-offset-right, 0px) + max(var(--rbt-gap), env(safe-area-inset-right, 0px)));
 	--rbt-safe-bottom: env(safe-area-inset-bottom, 0px);
-	--rbt-bottom: calc(var(--rbt-offset-bottom, 0px) + var(--rbt-manual, 0px) + max(var(--rbt-safe-bottom), var(--rbt-occupied, 0px) + var(--rbt-gap)));
+	--rbt-bottom: calc(var(--rbt-manual, 0px) + max(var(--rbt-offset-bottom, 0px) + max(var(--rbt-safe-bottom), var(--rbt-gap)), var(--rbt-occupied, 0px) + var(--rbt-gap)));
 	--rbt-left: calc(var(--rbt-offset-left, 0px) + max(var(--rbt-gap), env(safe-area-inset-left, 0px)));
 	--rbt-width: 300px;
 	--rbt-close-size: 28px;
