@@ -22,7 +22,7 @@ The dialog supports keyboard dismissal and reduced motion. Rotation pauses while
 2. Install and activate Recently Bought This for WooCommerce, or upload the plugin ZIP under Plugins → Add Plugin.
 3. Open **Recently Bought** in the WordPress admin to configure the storefront notification.
 
-Tested through the WordPress 7.1 and WooCommerce 11.3 series. Licensed under GPLv2 or later.
+Tested with WordPress 7.2 RC3, WooCommerce 11.3.1 and PHP 8.6.0. Licensed under GPLv2 or later.
 
 ## FAQ
 
@@ -70,6 +70,11 @@ A cached page can retain older products and time labels. Clear or expire the aff
 4. A compact purchase notification above the bottom navigation on a mobile storefront.
 
 ## Changelog
+
+### 1.0.3
+
+- Add a one-time review invitation on the plugin settings screen after at least three visits over at least seven days.
+- Clear local review history when the plugin is uninstalled.
 
 ### 1.0.2
 

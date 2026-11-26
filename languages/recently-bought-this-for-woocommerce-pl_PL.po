@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Recently Bought This for WooCommerce 1.0.2\n"
+"Project-Id-Version: Recently Bought This for WooCommerce 1.0.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/recently-bought-this-for-woocommerce/\n"
 "POT-Creation-Date: 2026-11-25T15:35:59+00:00\n"
 "PO-Revision-Date: 2026-11-25T15:35:59+00:00\n"
@@ -192,3 +192,23 @@ msgstr "Nie pokazuj czasu zakupu"
 #: views/options.php:91
 msgid "Display approximate purchase time"
 msgstr "Pokazuj przybliżony czas zakupu"
+
+#: class-recently-bought-review-prompt.php:71
+msgid "Have you tried Recently Bought This for WooCommerce?"
+msgstr "Czy korzystasz już z Recently Bought This for WooCommerce?"
+
+#: class-recently-bought-review-prompt.php:72
+msgid "We'd love to hear about your experience. Your feedback helps us improve the plugin and supports its continued development."
+msgstr "Chętnie poznamy Twoje doświadczenia. Twoja opinia pomoże nam ulepszać wtyczkę i wspierać jej dalszy rozwój."
+
+#: class-recently-bought-review-prompt.php:75
+msgid "Leave a review"
+msgstr "Dodaj opinię"
+
+#: class-recently-bought-review-prompt.php:76
+msgid "Don't show again"
+msgstr "Nie pokazuj ponownie"
+
+#: class-recently-bought-review-prompt.php:77
+msgid "Dismiss review request"
+msgstr "Zamknij prośbę o opinię"

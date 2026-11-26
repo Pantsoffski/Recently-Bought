@@ -2,9 +2,9 @@
 Contributors: piotr-pesta
 Tags: purchase notifications, ecommerce, storefront, hpos
 Requires at least: 7.0
-Tested up to: 7.1
+Tested up to: 7.2
 Requires PHP: 8.2
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -77,6 +77,10 @@ A cached page can retain older products and time labels. Clear or expire the aff
 
 == Changelog ==
 
+= 1.0.3 =
+* Add a one-time review invitation on the plugin settings screen after at least three visits over at least seven days.
+* Clear local review history when the plugin is uninstalled.
+
 = 1.0.2 =
 * Use a compact mobile layout with a larger close target.
 * Automatically position notifications above common bottom navigation bars and offer a manual bottom spacing fallback.
@@ -101,6 +105,9 @@ A cached page can retain older products and time labels. Clear or expire the aff
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Adds a one-time review invitation in the plugin settings.
 
 = 1.0.2 =
 Adds compact notifications and defaults bottom spacing to Automatic. Existing settings are preserved.

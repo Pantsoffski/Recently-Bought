@@ -15,6 +15,7 @@ $recently_bought_spacing      = Someone_Recently_Bought_Init::get_setting( 'bott
 ?>
 <div class="wrap">
 	<h2><?php esc_html_e( 'Recently Bought This for WooCommerce - Settings', 'recently-bought-this-for-woocommerce' ); ?></h2>
+	<?php Recently_Bought_Review_Prompt::render(); ?>
 	<form method="post" action="options.php">
 		<?php
 		settings_fields( 'recently_bought_settings_group' );

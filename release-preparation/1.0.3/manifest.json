@@ -1,0 +1,86 @@
+{
+  "version": "1.0.3",
+  "algorithm": "SHA-256",
+  "archive": {
+    "path": "../recently-bought-this-for-woocommerce-1.0.3.zip",
+    "bytes": 23482,
+    "sha256": "5aedc07104cc41bf4d11d1ed9e5f982e7945a387778300240bed60c5345ad961"
+  },
+  "archive_contents": {
+    "recently-bought-this-for-woocommerce/_inc/recently-bought-style.css": {
+      "bytes": 5739,
+      "sha256": "a401ee50c6abcac5e036f40713b5744c78539609d68a7c865778fd18abfcf61b"
+    },
+    "recently-bought-this-for-woocommerce/_inc/recently-bought.js": {
+      "bytes": 17839,
+      "sha256": "fb9f367d78ae2c8e0541818dfc3cf43376b33879ddfdfb70c142109054bcae1c"
+    },
+    "recently-bought-this-for-woocommerce/class-recently-bought-review-prompt.php": {
+      "bytes": 6257,
+      "sha256": "7fd97a90cfffeeeb2d0460d68830ef6bf47573e0a0368d0451c6591f65b63e50"
+    },
+    "recently-bought-this-for-woocommerce/classes.php": {
+      "bytes": 17595,
+      "sha256": "93d3e5a6c27df82bafb03e8f41801d57447dcca0ea8373d688ba6efaffd58577"
+    },
+    "recently-bought-this-for-woocommerce/languages/recently-bought-this-for-woocommerce-pl_PL.l10n.php": {
+      "bytes": 5630,
+      "sha256": "eb540e1a1534e5d2b1d3e889cb6ff86b8f89ed99071c433216cd460fb80c0f65"
+    },
+    "recently-bought-this-for-woocommerce/pp-recently-bought-for-woocommerce.php": {
+      "bytes": 1753,
+      "sha256": "35009d1fdc242adf79743e1e7e573c727717e2b5e08e5894426aee184913ffd7"
+    },
+    "recently-bought-this-for-woocommerce/readme.txt": {
+      "bytes": 6469,
+      "sha256": "eb3d8dbf70ef175e0a722ac9fc7fdfea2c85689e7c20d0989f8b989da74cf2eb"
+    },
+    "recently-bought-this-for-woocommerce/views/options.php": {
+      "bytes": 8514,
+      "sha256": "eb30b7bebdc8a56a3fa4010fff4951c38c69fe0966862bab274d96a5541abf5f"
+    }
+  },
+  "screenshots": {
+    "review-en_US-desktop.png": {
+      "bytes": 74252,
+      "sha256": "56dcd9831ad78d001770eca3d6f9df47ecb231079a54b9ad89a10832cc8d91c9",
+      "width": 1280,
+      "height": 900
+    },
+    "review-en_US-mobile.png": {
+      "bytes": 45631,
+      "sha256": "94470950b97c4494ce9201b180af869b2624b808439f557bbeb95d49c4694ae6",
+      "width": 390,
+      "height": 844
+    },
+    "review-pl_PL-desktop.png": {
+      "bytes": 81436,
+      "sha256": "1b836908f3c43d88e6bac7c4b03baccbea7f35e653479ad339630a23d917aecd",
+      "width": 1280,
+      "height": 900
+    },
+    "review-pl_PL-mobile.png": {
+      "bytes": 49663,
+      "sha256": "1e6ea0056aebfa25c1aff51e379e09d64374417577b0ef827ad094a403564029",
+      "width": 390,
+      "height": 844
+    },
+    "storefront-mobile-320.png": {
+      "bytes": 49549,
+      "sha256": "4ccf94e82bd824ce40cd66d7b5a4fa7cb6a1ec1c49188c008cf615b7458c797e",
+      "width": 320,
+      "height": 720
+    },
+    "storefront-mobile-390.png": {
+      "bytes": 86393,
+      "sha256": "652ea9ce34b469c2aaed29a39c3f4f5118396468d57668f0e4973c49c5d5579e",
+      "width": 390,
+      "height": 844
+    }
+  },
+  "comparison_baseline": {
+    "url": "https://downloads.wordpress.org/plugin/recently-bought-this-for-woocommerce.1.0.2.zip",
+    "bytes": 21078,
+    "sha256": "315c064055ee954ed7b73659676a3412436c081a4b64f757db21f5493f189374"
+  }
+}

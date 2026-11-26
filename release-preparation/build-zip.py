@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = (
     "_inc/recently-bought-style.css",
     "_inc/recently-bought.js",
+    "class-recently-bought-review-prompt.php",
     "classes.php",
     f"languages/{SLUG}-pl_PL.l10n.php",
     "pp-recently-bought-for-woocommerce.php",

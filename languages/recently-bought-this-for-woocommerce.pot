@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Recently Bought This for WooCommerce 1.0.2\n"
+"Project-Id-Version: Recently Bought This for WooCommerce 1.0.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/recently-bought-this-for-woocommerce/\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -185,4 +185,24 @@ msgstr ""
 
 #: views/options.php:91
 msgid "Display approximate purchase time"
+msgstr ""
+
+#: class-recently-bought-review-prompt.php:71
+msgid "Have you tried Recently Bought This for WooCommerce?"
+msgstr ""
+
+#: class-recently-bought-review-prompt.php:72
+msgid "We'd love to hear about your experience. Your feedback helps us improve the plugin and supports its continued development."
+msgstr ""
+
+#: class-recently-bought-review-prompt.php:75
+msgid "Leave a review"
+msgstr ""
+
+#: class-recently-bought-review-prompt.php:76
+msgid "Don't show again"
+msgstr ""
+
+#: class-recently-bought-review-prompt.php:77
+msgid "Dismiss review request"
 msgstr ""

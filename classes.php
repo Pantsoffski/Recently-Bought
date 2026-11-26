@@ -63,11 +63,14 @@ class Someone_Recently_Bought_Init {
 		}
 	}
 
-	/** Remove the plugin options on uninstall. */
+	/** Remove the plugin options and review state on uninstall. */
 	public static function uninstall_plugin() {
 		foreach ( self::DEFAULTS as $key => $default ) {
 			delete_option( 'recently_bought_settings_' . $key );
 		}
+
+		require_once RECENTLY_BOUGHT_PLUGIN_DIR . 'class-recently-bought-review-prompt.php';
+		Recently_Bought_Review_Prompt::uninstall();
 	}
 
 	/** Register settings and their sanitizers with WordPress. */
@@ -166,12 +169,19 @@ class Someone_Recently_Bought_Init {
 	public static function admin_menu() {
 		$title = __( 'Recently Bought', 'recently-bought-this-for-woocommerce' );
 		$page  = add_menu_page( $title, $title, 'manage_options', 'recently-bought-settings', array( __CLASS__, 'options_page_rb' ), 'dashicons-cart' );
+		add_action( 'load-' . $page, array( __CLASS__, 'load_options_page' ) );
 		add_action(
 			'admin_print_styles-' . $page,
 			static function () {
 				wp_add_inline_style( 'common', '#recently-bought-spacing:not(:has(#recently-bought-spacing-manual:checked)) .recently-bought-manual-offset { display: none; }' );
 			}
 		);
+	}
+
+	/** Load the review prompt only on the plugin's own settings screen. */
+	public static function load_options_page() {
+		require_once RECENTLY_BOUGHT_PLUGIN_DIR . 'class-recently-bought-review-prompt.php';
+		Recently_Bought_Review_Prompt::prepare();
 	}
 
 	/** Render the settings page for authorized users. */

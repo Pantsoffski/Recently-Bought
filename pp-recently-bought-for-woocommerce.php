@@ -5,12 +5,12 @@
  * Description: Show linked product notifications for confirmed WooCommerce orders without revealing buyer details.
  * Author: Piotr Pesta
  * Author URI: https://profiles.wordpress.org/piotr-pesta/
- * Version: 1.0.2
+ * Version: 1.0.3
  * Requires at least: 7.0
  * Requires PHP: 8.2
  * Requires Plugins: woocommerce
  * WC requires at least: 11.2
- * WC tested up to: 11.3
+ * WC tested up to: 11.3.1
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: recently-bought-this-for-woocommerce
